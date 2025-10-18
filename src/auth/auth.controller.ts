@@ -129,8 +129,8 @@ export class AuthController {
       email: user.email,
       name: user.name,
       role: user.role,
-      isEmailConfirmed: user.isEmailConfirmed,
-      createdAt: user.createdAt,
+      isEmailConfirmed: user.is_email_confirmed,
+      createdAt: user.created_at,
     };
   }
 }

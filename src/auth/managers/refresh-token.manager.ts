@@ -20,23 +20,23 @@ export class RefreshTokenManager {
 
     const existingRefreshToken = await this.prisma.refreshToken.findFirst({
       where: {
-        userId: user.id,
-        userAgent: userAgentValue,
+        user_id: user.id,
+        user_agent: userAgentValue,
       },
     });
 
     if (existingRefreshToken) {
       await this.prisma.refreshToken.update({
         where: { id: existingRefreshToken.id },
-        data: { token: refreshToken, expiresAt },
+        data: { token: refreshToken, expires_at: expiresAt },
       });
     } else {
       await this.prisma.refreshToken.create({
         data: {
           token: refreshToken,
-          userId: user.id,
-          userAgent: userAgentValue,
-          expiresAt,
+          user_id: user.id,
+          user_agent: userAgentValue,
+          expires_at: expiresAt,
         },
       });
     }
@@ -48,7 +48,7 @@ export class RefreshTokenManager {
     const refreshToken = await this.prisma.refreshToken.findFirst({
       where: {
         token,
-        expiresAt: {
+        expires_at: {
           gt: new Date(),
         },
       },
@@ -68,7 +68,7 @@ export class RefreshTokenManager {
 
   async deleteAllUserRefreshTokens(userId: string): Promise<void> {
     await this.prisma.refreshToken.deleteMany({
-      where: { userId },
+      where: { user_id: userId },
     });
   }
 }

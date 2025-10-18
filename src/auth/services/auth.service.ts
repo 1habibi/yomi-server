@@ -37,20 +37,20 @@ export class AuthService {
       throw new ConflictException("Пользователь с таким email уже существует");
     }
     const hashedPassword = await this.passwordService.hashPassword(password);
-    const emailConfirmToken = uuidv4();
+    const email_confirm_token = uuidv4();
 
     await this.prisma.user.create({
       data: {
         email,
         password: hashedPassword,
         name,
-        emailConfirmToken,
+        email_confirm_token,
       },
     });
 
     await this.emailService.sendEmailConfirmation(
       email,
-      emailConfirmToken,
+      email_confirm_token,
       name,
     );
 
@@ -84,22 +84,22 @@ export class AuthService {
 
   async confirmEmail(token: string): Promise<{ message: string }> {
     const user = await this.prisma.user.findFirst({
-      where: { emailConfirmToken: token },
+      where: { email_confirm_token: token },
     });
 
     if (!user) {
       throw new BadRequestException("Неверный токен подтверждения");
     }
 
-    if (user.isEmailConfirmed) {
+    if (user.is_email_confirmed) {
       throw new BadRequestException("Email уже подтвержден");
     }
 
     await this.prisma.user.update({
       where: { id: user.id },
       data: {
-        isEmailConfirmed: true,
-        emailConfirmToken: null,
+        is_email_confirmed: true,
+        email_confirm_token: null,
       },
     });
 
@@ -126,8 +126,8 @@ export class AuthService {
     await this.prisma.user.update({
       where: { id: user.id },
       data: {
-        resetPasswordToken: resetToken,
-        resetPasswordExpires: resetExpires,
+        reset_password_token: resetToken,
+        reset_password_expires: resetExpires,
       },
     });
 
@@ -145,8 +145,8 @@ export class AuthService {
   ): Promise<{ message: string }> {
     const user = await this.prisma.user.findFirst({
       where: {
-        resetPasswordToken: token,
-        resetPasswordExpires: {
+        reset_password_token: token,
+        reset_password_expires: {
           gt: new Date(),
         },
       },
@@ -164,8 +164,8 @@ export class AuthService {
       where: { id: user.id },
       data: {
         password: hashedPassword,
-        resetPasswordToken: null,
-        resetPasswordExpires: null,
+        reset_password_token: null,
+        reset_password_expires: null,
       },
     });
 
@@ -247,7 +247,7 @@ export class AuthService {
       throw new UnauthorizedException("Неверный email или пароль");
     }
 
-    if (!user.isEmailConfirmed) {
+    if (!user.is_email_confirmed) {
       throw new UnauthorizedException(
         "Пожалуйста, подтвердите ваш email адрес",
       );
@@ -262,7 +262,7 @@ export class AuthService {
       email: user.email,
       name: user.name,
       role: user.role,
-      isEmailConfirmed: user.isEmailConfirmed,
+      isEmailConfirmed: user.is_email_confirmed,
     };
   }
 }

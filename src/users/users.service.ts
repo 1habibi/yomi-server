@@ -12,9 +12,9 @@ export class UsersService {
         email: true,
         name: true,
         role: true,
-        isEmailConfirmed: true,
-        createdAt: true,
-        updatedAt: true,
+        is_email_confirmed: true,
+        created_at: true,
+        updated_at: true,
       },
     });
   }
@@ -27,9 +27,9 @@ export class UsersService {
         email: true,
         name: true,
         role: true,
-        isEmailConfirmed: true,
-        createdAt: true,
-        updatedAt: true,
+        is_email_confirmed: true,
+        created_at: true,
+        updated_at: true,
       },
     });
   }

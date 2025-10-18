@@ -56,20 +56,20 @@ export class TokenService {
 
     await this.prisma.refreshToken.upsert({
       where: {
-        userId_userAgent: {
-          userId: user.id,
-          userAgent,
+        user_id_user_agent: {
+          user_id: user.id,
+          user_agent: userAgent,
         },
       },
       update: {
         token: refreshToken,
-        expiresAt,
+        expires_at: expiresAt,
       },
       create: {
         token: refreshToken,
-        userId: user.id,
-        userAgent,
-        expiresAt,
+        user_id: user.id,
+        user_agent: userAgent,
+        expires_at: expiresAt,
       },
     });
 
@@ -80,7 +80,7 @@ export class TokenService {
     const refreshToken = await this.prisma.refreshToken.findFirst({
       where: {
         token,
-        expiresAt: {
+        expires_at: {
           gt: new Date(),
         },
       },
@@ -98,9 +98,9 @@ export class TokenService {
     });
   }
 
-  async deleteAllUserRefreshTokens(userId: string): Promise<void> {
+  async deleteAllUserRefreshTokens(user_id: string): Promise<void> {
     await this.prisma.refreshToken.deleteMany({
-      where: { userId },
+      where: { user_id },
     });
   }
 }
