@@ -1,15 +1,10 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
+// ---------- Generator & Datasource ----------
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "mysql"
   url      = env("DATABASE_URL")
 }
 
@@ -19,34 +14,216 @@ enum Role {
   MODERATOR
 }
 
+enum InteractionType {
+  WATCHED      // просмотрено
+  PLANNED      // в планах
+  WATCHING     // смотрю
+  DROPPED      // заброшено
+  FAVORITE     // любимое 
+  RECOMMENDED  // рекомендовано
+  DISLIKED     // ненавижу
+}
+
 model User {
-  id                String   @id @default(cuid())
-  email             String   @unique
-  password          String
-  name              String
-  role              Role     @default(USER)
-  isEmailConfirmed  Boolean  @default(false)
-  emailConfirmToken String?
-  resetPasswordToken String?
-  resetPasswordExpires DateTime?
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
-  
-  refreshTokens     RefreshToken[]
-  
+  id                   String    @id @default(cuid())
+  email                String    @unique
+  password             String
+  name                 String
+  role                 Role      @default(USER)
+  is_email_confirmed     Boolean   @default(false)
+  email_confirm_token    String?
+  reset_password_token   String?
+  reset_password_expires DateTime?
+  created_at            DateTime  @default(now())
+  updated_at            DateTime  @updatedAt
+
+  refresh_tokens RefreshToken[]
+  user_anime     UserAnime[]
+
   @@map("users")
 }
 
 model RefreshToken {
   id        String   @id @default(cuid())
   token     String   @unique
-  userId    String
-  userAgent String   @default("Unknown")
-  expiresAt DateTime
-  createdAt DateTime @default(now())
-  
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
-  @@unique([userId, userAgent])
+  user_id    String
+  user_agent String   @default("Unknown")
+  expires_at DateTime
+  created_at DateTime @default(now())
+
+  user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@unique([user_id, user_agent])
   @@map("refresh_tokens")
+}
+
+model Anime {
+  id                Int       @id @default(autoincrement())
+  kodik_id          String    @unique
+  kodik_type        String?
+  link              String?
+  title             String?
+  title_orig        String?
+  other_title       String? @db.Text
+  year              Int?
+  last_season       Int?
+  last_episode      Int?
+  episodes_count    Int?
+  kinopoisk_id      String?
+  imdb_id           String?
+  shikimori_id      String?
+  quality           String?
+  camrip            Boolean?  @default(false)
+  lgbt              Boolean?  @default(false)
+  created_at        DateTime? @db.DateTime(0)
+  updated_at        DateTime? @db.DateTime(0)
+  description       String?   @db.MediumText
+  anime_description String?   @db.MediumText
+  poster_url        String?
+  anime_poster_url  String?
+  premiere_world    DateTime? @db.Date
+  aired_at          DateTime? @db.Date
+  released_at       DateTime? @db.Date
+  rating_mpaa       String?
+  minimal_age       Int?
+  episodes_total    Int?
+  episodes_aired    Int?
+  imdb_rating       Float?
+  imdb_votes        Int?
+  shikimori_rating  Float?
+  shikimori_votes   Float?
+  next_episode_at   DateTime?
+  all_status        String?
+  anime_kind        String?
+  duration          Int?
+
+  translations      Translation[]
+  anime_genres      Anime_Genres[]
+  screenshots       Screenshot[]
+  anime_persons     Anime_Persons[]
+  anime_studios     Anime_Studios[]
+  blocked_countries Blocked_Countries[]
+  blocked_seasons   Blocked_Seasons[]
+  user_anime        UserAnime[]
+
+  @@map("anime")
+}
+
+model Translation {
+  id          Int     @id @default(autoincrement())
+  anime_id    Int?
+  external_id Int?
+  title       String?
+  trans_type  String?
+
+  anime Anime? @relation(fields: [anime_id], references: [id], onDelete: Cascade)
+
+  @@map("translations")
+}
+
+model Genre {
+  id   Int    @id @default(autoincrement())
+  name String @unique
+
+  anime_genres Anime_Genres[]
+
+  @@map("genres")
+}
+
+model Anime_Genres {
+  anime_id Int
+  genre_id Int
+
+  anime Anime? @relation(fields: [anime_id], references: [id], onDelete: Cascade)
+  genre Genre? @relation(fields: [genre_id], references: [id], onDelete: Cascade)
+
+  @@id([anime_id, genre_id])
+  @@map("anime_genres")
+}
+
+model Screenshot {
+  id       Int     @id @default(autoincrement())
+  anime_id Int?
+  url      String?
+
+  anime Anime? @relation(fields: [anime_id], references: [id], onDelete: Cascade)
+
+  @@map("screenshots")
+}
+
+model Persons {
+  id   Int    @id @default(autoincrement())
+  name String @unique
+
+  anime_persons Anime_Persons[]
+
+  @@map("persons")
+}
+
+model Anime_Persons {
+  anime_id  Int
+  person_id Int
+  role      String
+
+  anime  Anime?   @relation(fields: [anime_id], references: [id], onDelete: Cascade)
+  person Persons? @relation(fields: [person_id], references: [id], onDelete: Cascade)
+
+  @@id([anime_id, person_id, role])
+  @@map("anime_persons")
+}
+
+model Studios {
+  id   Int    @id @default(autoincrement())
+  name String @unique
+
+  anime_studios Anime_Studios[]
+
+  @@map("studios")
+}
+
+model Anime_Studios {
+  anime_id  Int
+  studio_id Int
+
+  anime  Anime?   @relation(fields: [anime_id], references: [id], onDelete: Cascade)
+  studio Studios? @relation(fields: [studio_id], references: [id], onDelete: Cascade)
+
+  @@id([anime_id, studio_id])
+  @@map("anime_studios")
+}
+
+model Blocked_Countries {
+  id       Int     @id @default(autoincrement())
+  anime_id Int?
+  country  String?
+
+  anime Anime? @relation(fields: [anime_id], references: [id], onDelete: Cascade)
+
+  @@map("blocked_countries")
+}
+
+model Blocked_Seasons {
+  id           Int     @id @default(autoincrement())
+  anime_id     Int?
+  season       String?
+  blocked_data Json?
+
+  anime Anime? @relation(fields: [anime_id], references: [id], onDelete: Cascade)
+
+  @@map("blocked_seasons")
+}
+
+model UserAnime {
+  id        Int       @id @default(autoincrement())
+  user_id    String
+  anime_id   Int
+  rating    Int?
+  interaction InteractionType
+  interacted_at DateTime? @default(now())
+
+  user  User  @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  anime Anime @relation(fields: [anime_id], references: [id], onDelete: Cascade)
+
+  @@unique([user_id, anime_id])
+  @@map("user_anime")
 }
