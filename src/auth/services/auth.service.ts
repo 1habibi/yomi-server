@@ -121,7 +121,7 @@ export class AuthService {
     }
 
     const resetToken = uuidv4();
-    const resetExpires = new Date(Date.now() + 60 * 60 * 1000); // 1 час
+    const resetExpires = new Date(Date.now() + 60 * 60 * 1000);
 
     await this.prisma.user.update({
       where: { id: user.id },

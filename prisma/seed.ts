@@ -174,9 +174,8 @@ function selectInteractionType(preferences: any) {
 function selectRatingForInteraction(interactionType: string): number | null {
   const possibleRatings = RATING_MAP[interactionType] || [5];
 
-  // Выбираем рейтинг на основе типа взаимодействия
   if (interactionType === 'FAVORITE' || interactionType === 'WATCHED') {
-    return faker.helpers.arrayElement([9, 10]) as number; // Высокие рейтинги для любимых и просмотренных
+    return faker.helpers.arrayElement([9, 10]) as number;
   }
 
   return faker.helpers.arrayElement(possibleRatings) as number;
@@ -250,7 +249,6 @@ async function main() {
 
     console.log(`Найдено ${animeIds.length} аниме в базе данных`);
 
-    // Создаем пользователей
     const users = await createTestUsers();
 
     await createUserAnimeInteractions(users, animeIds);

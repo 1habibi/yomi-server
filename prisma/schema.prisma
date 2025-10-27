@@ -1,4 +1,3 @@
-// ---------- Generator & Datasource ----------
 generator client {
   provider = "prisma-client-js"
 }
@@ -97,9 +96,9 @@ model Anime {
   anime_kind        String?
   duration          Int?
 
-  translations      Translation[]
+  anime_translations      Anime_Translation[]
   anime_genres      Anime_Genres[]
-  screenshots       Screenshot[]
+  anime_screenshots       Anime_Screenshot[]
   anime_persons     Anime_Persons[]
   anime_studios     Anime_Studios[]
   blocked_countries Blocked_Countries[]
@@ -109,7 +108,7 @@ model Anime {
   @@map("anime")
 }
 
-model Translation {
+model Anime_Translation {
   id          Int     @id @default(autoincrement())
   anime_id    Int?
   external_id Int?
@@ -118,7 +117,7 @@ model Translation {
 
   anime Anime? @relation(fields: [anime_id], references: [id], onDelete: Cascade)
 
-  @@map("translations")
+  @@map("anime_translations")
 }
 
 model Genre {
@@ -141,14 +140,14 @@ model Anime_Genres {
   @@map("anime_genres")
 }
 
-model Screenshot {
+model Anime_Screenshot {
   id       Int     @id @default(autoincrement())
   anime_id Int?
   url      String?
 
   anime Anime? @relation(fields: [anime_id], references: [id], onDelete: Cascade)
 
-  @@map("screenshots")
+  @@map("anime_screenshots")
 }
 
 model Persons {
