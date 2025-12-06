@@ -1,14 +1,16 @@
 import { Module } from '@nestjs/common';
-import { ConfigModule } from './config/config.module';
-import { PrismaModule } from './prisma/prisma.module';
-import { EmailModule } from './email/email.module';
-import { AuthModule } from './auth/auth.module';
-import { UsersModule } from './users/users.module';
+import { ScheduleModule } from '@nestjs/schedule';
 import { AnimeModule } from './anime/anime.module';
+import { AuthModule } from './auth/auth.module';
+import { ConfigModule } from './config/config.module';
+import { EmailModule } from './email/email.module';
+import { PrismaModule } from './prisma/prisma.module';
+import { UsersModule } from './users/users.module';
 
 @Module({
   imports: [
     ConfigModule,
+    ScheduleModule.forRoot(),
     PrismaModule,
     EmailModule,
     AuthModule,

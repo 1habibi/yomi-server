@@ -9,6 +9,7 @@ import { JwtAuthGuard } from "./guards/jwt-auth.guard";
 import { CookieManager } from "./managers/cookie.manager";
 import { AuthService } from "./services/auth.service";
 import { PasswordService } from "./services/password.service";
+import { TokenCleanupService } from "./services/token-cleanup.service";
 import { TokenService } from "./services/token.service";
 import { JwtStrategy } from "./strategies/jwt.strategy";
 
@@ -33,6 +34,7 @@ import { JwtStrategy } from "./strategies/jwt.strategy";
   providers: [
     AuthService,
     TokenService,
+    TokenCleanupService,
     PasswordService,
     CookieManager,
     JwtStrategy,

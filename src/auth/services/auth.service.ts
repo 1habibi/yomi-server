@@ -2,6 +2,7 @@ import {
   BadRequestException,
   ConflictException,
   Injectable,
+  ServiceUnavailableException,
   UnauthorizedException,
 } from "@nestjs/common";
 import { User } from "@prisma/client";
@@ -38,21 +39,32 @@ export class AuthService {
     }
     const hashedPassword = await this.passwordService.hashPassword(password);
     const email_confirm_token = uuidv4();
+    const email_confirm_expires = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 часа
 
-    await this.prisma.user.create({
+    const user = await this.prisma.user.create({
       data: {
         email,
         password: hashedPassword,
         name,
         email_confirm_token,
+        email_confirm_expires,
       },
     });
 
-    await this.emailService.sendEmailConfirmation(
-      email,
-      email_confirm_token,
-      name,
-    );
+    try {
+      await this.emailService.sendEmailConfirmation(
+        email,
+        email_confirm_token,
+        name,
+      );
+    } catch (error) {
+      await this.prisma.user.delete({ where: { id: user.id } }).catch(() => {
+        // Игнорируем ошибку удаления, чтобы не скрыть исходную причину.
+      });
+      throw new ServiceUnavailableException(
+        "Не удалось отправить письмо для подтверждения. Попробуйте позже.",
+      );
+    }
 
     return {
       message:
@@ -60,7 +72,11 @@ export class AuthService {
     };
   }
 
-  async login(loginDto: LoginDto, userAgent: string): Promise<AuthResponse> {
+  async login(
+    loginDto: LoginDto,
+    userAgent: string,
+    ipAddress?: string,
+  ): Promise<AuthResponse> {
     const { email, password } = loginDto;
 
     const user = await this.validateUserCredentials(email, password);
@@ -73,6 +89,7 @@ export class AuthService {
     const refreshToken = await this.tokenService.createOrUpdateRefreshToken(
       user,
       userAgent,
+      ipAddress,
     );
 
     return {
@@ -84,11 +101,18 @@ export class AuthService {
 
   async confirmEmail(token: string): Promise<{ message: string }> {
     const user = await this.prisma.user.findFirst({
-      where: { email_confirm_token: token },
+      where: {
+        email_confirm_token: token,
+        email_confirm_expires: {
+          gt: new Date(),
+        },
+      },
     });
 
     if (!user) {
-      throw new BadRequestException("Неверный токен подтверждения");
+      throw new BadRequestException(
+        "Неверный или истекший токен подтверждения",
+      );
     }
 
     if (user.is_email_confirmed) {
@@ -100,6 +124,7 @@ export class AuthService {
       data: {
         is_email_confirmed: true,
         email_confirm_token: null,
+        email_confirm_expires: null,
       },
     });
 
@@ -179,6 +204,7 @@ export class AuthService {
   async refreshToken(
     refreshToken: string,
     userAgent?: string,
+    ipAddress?: string,
   ): Promise<AuthResponse> {
     const user = await this.tokenService.validateRefreshToken(refreshToken);
     if (!user) {
@@ -194,6 +220,7 @@ export class AuthService {
     const newRefreshToken = await this.tokenService.createOrUpdateRefreshToken(
       user,
       userAgent || "Unknown",
+      ipAddress,
     );
 
     return {
@@ -203,8 +230,8 @@ export class AuthService {
     };
   }
 
-  async logout(userId: string): Promise<{ message: string }> {
-    await this.tokenService.deleteAllUserRefreshTokens(userId);
+  async logout(refreshToken: string): Promise<{ message: string }> {
+    await this.tokenService.deleteRefreshToken(refreshToken);
 
     return {
       message: "Выход выполнен успешно",
@@ -216,6 +243,42 @@ export class AuthService {
 
     return {
       message: "Выход из всех устройств выполнен успешно",
+    };
+  }
+
+  async getSessions(userId: string, currentToken?: string) {
+    const sessions = await this.tokenService.getUserSessions(userId);
+    let currentSessionId: string | null = null;
+
+    if (currentToken) {
+      const currentSession =
+        await this.tokenService.getSessionByToken(currentToken);
+      currentSessionId = currentSession?.id || null;
+    }
+
+    return sessions.map((session) => ({
+      id: session.id,
+      userAgent: session.user_agent,
+      ipAddress: session.ip_address,
+      lastActivity: session.last_activity,
+      createdAt: session.created_at,
+      expiresAt: session.expires_at,
+      isCurrent: session.id === currentSessionId,
+    }));
+  }
+
+  async terminateSession(
+    sessionId: string,
+    userId: string,
+  ): Promise<{ message: string }> {
+    const deleted = await this.tokenService.deleteSessionById(sessionId, userId);
+
+    if (!deleted) {
+      throw new BadRequestException("Сессия не найдена");
+    }
+
+    return {
+      message: "Сессия успешно завершена",
     };
   }
 

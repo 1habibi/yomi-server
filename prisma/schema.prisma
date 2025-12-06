@@ -31,6 +31,7 @@ model User {
   role                 Role      @default(USER)
   is_email_confirmed     Boolean   @default(false)
   email_confirm_token    String?
+  email_confirm_expires  DateTime?
   reset_password_token   String?
   reset_password_expires DateTime?
   created_at            DateTime  @default(now())
@@ -43,12 +44,14 @@ model User {
 }
 
 model RefreshToken {
-  id        String   @id @default(cuid())
-  token     String   @unique
-  user_id    String
-  user_agent String   @default("Unknown")
-  expires_at DateTime
-  created_at DateTime @default(now())
+  id           String   @id @default(cuid())
+  token        String   @unique
+  user_id      String
+  user_agent   String   @default("Unknown")
+  ip_address   String?
+  last_activity DateTime @default(now())
+  expires_at   DateTime
+  created_at   DateTime @default(now())
 
   user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
 

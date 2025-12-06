@@ -1,10 +1,12 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   HttpCode,
   HttpStatus,
   Ip,
+  Param,
   Post,
   Query,
   Req,
@@ -44,7 +46,7 @@ export class AuthController {
     @Ip() ip: string,
   ) {
     const userAgent = req.get("User-Agent") || "Unknown";
-    const result = await this.authService.login(loginDto, userAgent);
+    const result = await this.authService.login(loginDto, userAgent, ip);
 
     this.cookieManager.setRefreshTokenCookie(res, result.refreshToken);
 
@@ -78,6 +80,7 @@ export class AuthController {
   async refreshToken(
     @Req() req: Request,
     @Res({ passthrough: true }) res: Response,
+    @Ip() ip: string,
   ) {
     const refreshToken = req.cookies?.refreshToken;
 
@@ -86,7 +89,11 @@ export class AuthController {
     }
 
     const userAgent = req.get("User-Agent") || "Unknown";
-    const result = await this.authService.refreshToken(refreshToken, userAgent);
+    const result = await this.authService.refreshToken(
+      refreshToken,
+      userAgent,
+      ip,
+    );
 
     this.cookieManager.setRefreshTokenCookie(res, result.refreshToken);
 
@@ -99,10 +106,14 @@ export class AuthController {
   @UseGuards(JwtAuthGuard)
   @HttpCode(HttpStatus.OK)
   async logout(
-    @CurrentUser() user: User,
+    @Req() req: Request,
     @Res({ passthrough: true }) res: Response,
   ) {
-    await this.authService.logout(user.id);
+    const refreshToken = req.cookies?.refreshToken;
+    
+    if (refreshToken) {
+      await this.authService.logout(refreshToken);
+    }
 
     this.cookieManager.clearAuthCookies(res);
 
@@ -132,5 +143,22 @@ export class AuthController {
       isEmailConfirmed: user.is_email_confirmed,
       createdAt: user.created_at,
     };
+  }
+
+  @Get("sessions")
+  @UseGuards(JwtAuthGuard)
+  async getSessions(@CurrentUser() user: User, @Req() req: Request) {
+    const currentToken = req.cookies?.refreshToken;
+    return this.authService.getSessions(user.id, currentToken);
+  }
+
+  @Delete("sessions/:id")
+  @UseGuards(JwtAuthGuard)
+  @HttpCode(HttpStatus.OK)
+  async terminateSession(
+    @Param("id") sessionId: string,
+    @CurrentUser() user: User,
+  ) {
+    return this.authService.terminateSession(sessionId, user.id);
   }
 }

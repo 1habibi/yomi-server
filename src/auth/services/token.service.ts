@@ -50,6 +50,7 @@ export class TokenService {
   async createOrUpdateRefreshToken(
     user: User,
     userAgent: string,
+    ipAddress?: string,
   ): Promise<string> {
     const refreshToken = this.generateRefreshToken();
     const expiresAt = this.getRefreshTokenExpiration();
@@ -64,11 +65,14 @@ export class TokenService {
       update: {
         token: refreshToken,
         expires_at: expiresAt,
+        ip_address: ipAddress,
+        last_activity: new Date(),
       },
       create: {
         token: refreshToken,
         user_id: user.id,
         user_agent: userAgent,
+        ip_address: ipAddress,
         expires_at: expiresAt,
       },
     });
@@ -101,6 +105,49 @@ export class TokenService {
   async deleteAllUserRefreshTokens(user_id: string): Promise<void> {
     await this.prisma.refreshToken.deleteMany({
       where: { user_id },
+    });
+  }
+
+  async getUserSessions(userId: string) {
+    return this.prisma.refreshToken.findMany({
+      where: {
+        user_id: userId,
+        expires_at: {
+          gt: new Date(),
+        },
+      },
+      select: {
+        id: true,
+        user_agent: true,
+        ip_address: true,
+        last_activity: true,
+        created_at: true,
+        expires_at: true,
+      },
+      orderBy: {
+        last_activity: "desc",
+      },
+    });
+  }
+
+  async deleteSessionById(
+    sessionId: string,
+    userId: string,
+  ): Promise<boolean> {
+    const result = await this.prisma.refreshToken.deleteMany({
+      where: {
+        id: sessionId,
+        user_id: userId,
+      },
+    });
+
+    return result.count > 0;
+  }
+
+  async getSessionByToken(token: string) {
+    return this.prisma.refreshToken.findFirst({
+      where: { token },
+      select: { id: true },
     });
   }
 }
