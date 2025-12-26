@@ -4,12 +4,13 @@ import { JwtModule } from "@nestjs/jwt";
 import { PassportModule } from "@nestjs/passport";
 import { EmailModule } from "../email/email.module";
 import { PrismaModule } from "../prisma/prisma.module";
+import { RedisModule } from "../redis/redis.module";
 import { AuthController } from "./auth.controller";
 import { JwtAuthGuard } from "./guards/jwt-auth.guard";
 import { CookieManager } from "./managers/cookie.manager";
 import { AuthService } from "./services/auth.service";
 import { PasswordService } from "./services/password.service";
-import { TokenCleanupService } from "./services/token-cleanup.service";
+import { SessionService } from "./services/session.service";
 import { TokenService } from "./services/token.service";
 import { JwtStrategy } from "./strategies/jwt.strategy";
 
@@ -17,6 +18,7 @@ import { JwtStrategy } from "./strategies/jwt.strategy";
   imports: [
     ConfigModule,
     PrismaModule,
+    RedisModule,
     EmailModule,
     PassportModule,
     JwtModule.registerAsync({
@@ -34,7 +36,7 @@ import { JwtStrategy } from "./strategies/jwt.strategy";
   providers: [
     AuthService,
     TokenService,
-    TokenCleanupService,
+    SessionService,
     PasswordService,
     CookieManager,
     JwtStrategy,

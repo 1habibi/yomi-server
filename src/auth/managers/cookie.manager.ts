@@ -9,7 +9,7 @@ export class CookieManager {
 
   constructor(private configService: ConfigService) {
     const refreshTokenExpiresIn = this.configService.get<string>(
-      "REFRESH_TOKEN_EXPIRES_IN",
+      "REFRESH_IDLE_TTL",
       "7d",
     );
     this.refreshTokenMaxAge = this.parseTimeToMs(refreshTokenExpiresIn);

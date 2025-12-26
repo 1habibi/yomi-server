@@ -26,7 +26,7 @@ async function bootstrap() {
 
   const config = new DocumentBuilder()
     .setTitle("Yomi API")
-    .setDescription("Yomi API with JWT Authentication")
+    .setDescription("Аниме онлайн-кинотеатр с элементами социального взаимодействия.")
     .setVersion("1.0")
     .addBearerAuth(
       {

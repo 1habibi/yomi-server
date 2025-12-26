@@ -100,17 +100,42 @@ export class AnimeService {
       select: {
         id: true,
         kodik_id: true,
+        kodik_type: true,
+        link: true,
         title: true,
         title_orig: true,
+        other_title: true,
         year: true,
-        all_status: true,
-        anime_kind: true,
+        last_season: true,
+        last_episode: true,
         episodes_count: true,
-        duration: true,
-        shikimori_rating: true,
+        kinopoisk_id: true,
+        imdb_id: true,
+        shikimori_id: true,
+        quality: true,
+        camrip: true,
+        lgbt: true,
+        created_at: true,
+        updated_at: true,
+        description: true,
+        anime_description: true,
         poster_url: true,
         anime_poster_url: true,
-        description: true,
+        premiere_world: true,
+        aired_at: true,
+        released_at: true,
+        rating_mpaa: true,
+        minimal_age: true,
+        episodes_total: true,
+        episodes_aired: true,
+        imdb_rating: true,
+        imdb_votes: true,
+        shikimori_rating: true,
+        shikimori_votes: true,
+        next_episode_at: true,
+        all_status: true,
+        anime_kind: true,
+        duration: true,
         anime_genres: {
           select: {
             genre: {
@@ -126,18 +151,14 @@ export class AnimeService {
             id: true,
             title: true,
             trans_type: true,
-          },
-          take: 3
-        },
-        anime_studios: {
-          select: {
-            studio: {
-              select: {
-                id: true,
-                name: true,
-              }
-            }
           }
+        },
+        anime_screenshots: {
+          select: {
+            id: true,
+            url: true,
+          },
+          take: 5
         },
         anime_persons: {
           select: {
@@ -148,6 +169,16 @@ export class AnimeService {
               }
             },
             role: true,
+          }
+        },
+        anime_studios: {
+          select: {
+            studio: {
+              select: {
+                id: true,
+                name: true,
+              }
+            }
           }
         },
         blocked_countries: {
@@ -259,6 +290,12 @@ export class AnimeService {
                 name: true,
               }
             }
+          }
+        },
+        blocked_countries: {
+          select: {
+            id: true,
+            country: true,
           }
         }
       }

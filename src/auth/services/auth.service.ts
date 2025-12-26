@@ -17,6 +17,7 @@ import {
   UserSafeData,
 } from "../interfaces/auth.interface";
 import { PasswordService } from "./password.service";
+import { SessionService } from "./session.service";
 import { TokenService } from "./token.service";
 
 @Injectable()
@@ -26,6 +27,7 @@ export class AuthService {
     private readonly emailService: EmailService,
     private readonly passwordService: PasswordService,
     private readonly tokenService: TokenService,
+    private readonly sessionService: SessionService,
   ) {}
 
   async register(registerDto: RegisterDto): Promise<{ message: string }> {
@@ -80,21 +82,19 @@ export class AuthService {
     const { email, password } = loginDto;
 
     const user = await this.validateUserCredentials(email, password);
+    const { refreshToken, sessionId } =
+      await this.sessionService.createSession(user.id, userAgent, ipAddress);
     const accessToken = this.tokenService.generateAccessToken({
       sub: user.id,
       email: user.email,
       role: user.role,
+      sessionId,
     });
-
-    const refreshToken = await this.tokenService.createOrUpdateRefreshToken(
-      user,
-      userAgent,
-      ipAddress,
-    );
 
     return {
       accessToken,
       refreshToken,
+      sessionId,
       user: this.mapToUserSafeData(user),
     };
   }
@@ -194,7 +194,7 @@ export class AuthService {
       },
     });
 
-    await this.tokenService.deleteAllUserRefreshTokens(user.id);
+    await this.sessionService.revokeAllForUser(user.id);
 
     return {
       message: "Пароль успешно изменен",
@@ -206,32 +206,40 @@ export class AuthService {
     userAgent?: string,
     ipAddress?: string,
   ): Promise<AuthResponse> {
-    const user = await this.tokenService.validateRefreshToken(refreshToken);
-    if (!user) {
-      throw new UnauthorizedException("Неверный refresh token");
-    }
+    const {
+      user,
+      sessionId,
+      refreshToken: newRefreshToken,
+    } = await this.sessionService.rotateSession(
+      refreshToken,
+      userAgent || "Unknown",
+      ipAddress,
+    );
 
     const accessToken = this.tokenService.generateAccessToken({
       sub: user.id,
       email: user.email,
       role: user.role,
+      sessionId,
     });
-
-    const newRefreshToken = await this.tokenService.createOrUpdateRefreshToken(
-      user,
-      userAgent || "Unknown",
-      ipAddress,
-    );
 
     return {
       accessToken,
       refreshToken: newRefreshToken,
+      sessionId,
       user: this.mapToUserSafeData(user),
     };
   }
 
   async logout(refreshToken: string): Promise<{ message: string }> {
-    await this.tokenService.deleteRefreshToken(refreshToken);
+    try {
+      await this.sessionService.revokeSessionByToken(refreshToken);
+    } catch (error) {
+      if (!(error instanceof UnauthorizedException)) {
+        throw error;
+      }
+      // Если токен некорректен или уже истёк — игнорируем для идемпотентности выхода.
+    }
 
     return {
       message: "Выход выполнен успешно",
@@ -239,41 +247,24 @@ export class AuthService {
   }
 
   async logoutAll(userId: string): Promise<{ message: string }> {
-    await this.tokenService.deleteAllUserRefreshTokens(userId);
+    await this.sessionService.revokeAllForUser(userId);
 
     return {
       message: "Выход из всех устройств выполнен успешно",
     };
   }
 
-  async getSessions(userId: string, currentToken?: string) {
-    const sessions = await this.tokenService.getUserSessions(userId);
-    let currentSessionId: string | null = null;
-
-    if (currentToken) {
-      const currentSession =
-        await this.tokenService.getSessionByToken(currentToken);
-      currentSessionId = currentSession?.id || null;
-    }
-
-    return sessions.map((session) => ({
-      id: session.id,
-      userAgent: session.user_agent,
-      ipAddress: session.ip_address,
-      lastActivity: session.last_activity,
-      createdAt: session.created_at,
-      expiresAt: session.expires_at,
-      isCurrent: session.id === currentSessionId,
-    }));
+  async getSessions(userId: string, currentSessionId?: string) {
+    return this.sessionService.getSessionsForUser(userId, currentSessionId);
   }
 
   async terminateSession(
     sessionId: string,
     userId: string,
   ): Promise<{ message: string }> {
-    const deleted = await this.tokenService.deleteSessionById(sessionId, userId);
+    const revoked = await this.sessionService.revokeSession(sessionId, userId);
 
-    if (!deleted) {
+    if (!revoked) {
       throw new BadRequestException("Сессия не найдена");
     }
 
@@ -326,6 +317,8 @@ export class AuthService {
       name: user.name,
       role: user.role,
       isEmailConfirmed: user.is_email_confirmed,
+      created_at: user.created_at,
+      updated_at: user.updated_at
     };
   }
 }

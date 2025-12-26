@@ -4,11 +4,13 @@ export interface JwtPayload {
   sub: string;
   email: string;
   role: Role;
+  sessionId: string;
 }
 
 export interface AuthResponse {
   accessToken: string;
   refreshToken: string;
+  sessionId: string;
   user: {
     id: string;
     email: string;
@@ -29,4 +31,6 @@ export interface UserSafeData {
   name: string;
   role: Role;
   isEmailConfirmed: boolean;
+  created_at: Date,
+  updated_at: Date,
 }
