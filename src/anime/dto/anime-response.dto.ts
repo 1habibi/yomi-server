@@ -1,4 +1,4 @@
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { ApiProperty } from '@nestjs/swagger';
 
 export class GenreDto {
   @ApiProperty({ example: 1 })
@@ -13,10 +13,10 @@ export class TranslationDto {
   id: number;
 
   @ApiProperty({ example: 'AniLibria' })
-  title: string;
+  title: string | null;
 
   @ApiProperty({ example: 'voice' })
-  trans_type: string;
+  trans_type: string | null;
 }
 
 export class ScreenshotDto {
@@ -24,7 +24,7 @@ export class ScreenshotDto {
   id: number;
 
   @ApiProperty({ example: 'https://example.com/screenshot.jpg' })
-  url: string;
+  url: string | null;
 }
 
 export class PersonDto {
@@ -48,7 +48,7 @@ export class BlockedCountryDto {
   id: number;
 
   @ApiProperty({ example: 'RU' })
-  country: string;
+  country: string | null;
 }
 
 export class AnimeResponseDto {
@@ -58,116 +58,116 @@ export class AnimeResponseDto {
   @ApiProperty({ example: 'anime-12345' })
   kodik_id: string;
 
-  @ApiPropertyOptional({ example: 'anime-serial' })
-  kodik_type?: string;
+  @ApiProperty({ example: 'anime-serial' })
+  kodik_type: string | null;
 
-  @ApiPropertyOptional({ example: 'https://kodik.info/anime/12345' })
-  link?: string;
+  @ApiProperty({ example: 'https://kodik.info/anime/12345' })
+  link: string | null;
 
-  @ApiPropertyOptional({ example: 'Наруто' })
-  title?: string;
+  @ApiProperty({ example: 'Наруто' })
+  title: string | null;
 
-  @ApiPropertyOptional({ example: 'Naruto' })
-  title_orig?: string;
+  @ApiProperty({ example: 'Naruto' })
+  title_orig: string | null;
 
-  @ApiPropertyOptional({ example: 'ナルト' })
-  other_title?: string;
+  @ApiProperty({ example: 'ナルト' })
+  other_title: string | null;
 
-  @ApiPropertyOptional({ example: 2002 })
-  year?: number;
+  @ApiProperty({ example: 2002 })
+  year: number | null;
 
-  @ApiPropertyOptional({ example: 5 })
-  last_season?: number;
+  @ApiProperty({ example: 5 })
+  last_season: number | null;
 
-  @ApiPropertyOptional({ example: 220 })
-  last_episode?: number;
+  @ApiProperty({ example: 220 })
+  last_episode: number | null;
 
-  @ApiPropertyOptional({ example: 220 })
-  episodes_count?: number;
+  @ApiProperty({ example: 220 })
+  episodes_count: number | null;
 
-  @ApiPropertyOptional({ example: '301' })
-  kinopoisk_id?: string;
+  @ApiProperty({ example: '301' })
+  kinopoisk_id: string | null;
 
-  @ApiPropertyOptional({ example: 'tt0409591' })
-  imdb_id?: string;
+  @ApiProperty({ example: 'tt0409591' })
+  imdb_id: string | null;
 
-  @ApiPropertyOptional({ example: '20' })
-  shikimori_id?: string;
+  @ApiProperty({ example: '20' })
+  shikimori_id: string | null;
 
-  @ApiPropertyOptional({ example: '720p' })
-  quality?: string;
+  @ApiProperty({ example: '720p' })
+  quality: string | null;
 
-  @ApiPropertyOptional({ example: false })
-  camrip?: boolean;
+  @ApiProperty({ example: false })
+  camrip: boolean | null;
 
-  @ApiPropertyOptional({ example: false })
-  lgbt?: boolean;
-
-  @ApiProperty()
-  created_at: Date;
+  @ApiProperty({ example: false })
+  lgbt: boolean | null;
 
   @ApiProperty()
-  updated_at: Date;
+  created_at: Date | null;
 
-  @ApiPropertyOptional({ example: 'Описание аниме' })
-  description?: string;
+  @ApiProperty()
+  updated_at: Date | null;
 
-  @ApiPropertyOptional({ example: 'Расширенное описание' })
-  anime_description?: string;
+  @ApiProperty({ example: 'Описание аниме' })
+  description: string | null;
 
-  @ApiPropertyOptional({ example: 'https://example.com/poster.jpg' })
-  poster_url?: string;
+  @ApiProperty({ example: 'Расширенное описание' })
+  anime_description: string | null;
 
-  @ApiPropertyOptional({ example: 'https://shikimori.org/poster.jpg' })
-  anime_poster_url?: string;
+  @ApiProperty({ example: 'https://example.com/poster.jpg' })
+  poster_url: string | null;
 
-  @ApiPropertyOptional()
-  premiere_world?: Date;
+  @ApiProperty({ example: 'https://shikimori.org/poster.jpg' })
+  anime_poster_url: string | null;
 
-  @ApiPropertyOptional()
-  aired_at?: Date;
+  @ApiProperty()
+  premiere_world: Date | null;
 
-  @ApiPropertyOptional()
-  released_at?: Date;
+  @ApiProperty()
+  aried_at: Date | null;
 
-  @ApiPropertyOptional({ example: 'PG-13' })
-  rating_mpaa?: string;
+  @ApiProperty()
+  released_at: Date | null;
 
-  @ApiPropertyOptional({ example: 13 })
-  minimal_age?: number;
+  @ApiProperty({ example: 'PG-13' })
+  rating_mpaa: string | null;
 
-  @ApiPropertyOptional({ example: 220 })
-  episodes_total?: number;
+  @ApiProperty({ example: 13 })
+  minimal_age: number | null;
 
-  @ApiPropertyOptional({ example: 220 })
-  episodes_aired?: number;
+  @ApiProperty({ example: 220 })
+  episodes_total: number | null;
 
-  @ApiPropertyOptional({ example: 8.3 })
-  imdb_rating?: number;
+  @ApiProperty({ example: 220 })
+  episodes_aired: number | null;
 
-  @ApiPropertyOptional({ example: 150000 })
-  imdb_votes?: number;
+  @ApiProperty({ example: 8.3 })
+  imdb_rating: number | null;
 
-  @ApiPropertyOptional({ example: 8.5 })
-  shikimori_rating?: number;
+  @ApiProperty({ example: 150000 })
+  imdb_votes: number | null;
 
-  @ApiPropertyOptional({ example: 50000 })
-  shikimori_votes?: number;
+  @ApiProperty({ example: 8.5 })
+  shikimori_rating?: number | null;
 
-  @ApiPropertyOptional()
-  next_episode_at?: Date;
+  @ApiProperty({ example: 50000 })
+  shikimori_votes: number | null;
 
-  @ApiPropertyOptional({ example: 'released' })
-  all_status?: string;
+  @ApiProperty()
+  next_episode_at: Date | null;
 
-  @ApiPropertyOptional({ example: 'tv' })
-  anime_kind?: string;
+  @ApiProperty({ example: 'released' })
+  all_status: string | null;
 
-  @ApiPropertyOptional({ example: 24 })
-  duration?: number;
+  @ApiProperty({ example: 'tv' })
+  anime_kind: string | null;
+
+  @ApiProperty({ example: 24 })
+  duration: number | null;
 
   @ApiProperty({ type: [Object] })
-  anime_genres: { genre: GenreDto }[];
+  anime_genres: { genre: GenreDto | null }[];
 
   @ApiProperty({ type: [TranslationDto] })
   anime_translations: TranslationDto[];
@@ -176,10 +176,10 @@ export class AnimeResponseDto {
   anime_screenshots: ScreenshotDto[];
 
   @ApiProperty({ type: [Object] })
-  anime_persons: { person: PersonDto; role: string }[];
+  anime_persons: { person: PersonDto | null; role: string | null }[];
 
   @ApiProperty({ type: [Object] })
-  anime_studios: { studio: StudioDto }[];
+  anime_studios: { studio: StudioDto | null }[];
 
   @ApiProperty({ type: [BlockedCountryDto] })
   blocked_countries: BlockedCountryDto[];

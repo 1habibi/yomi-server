@@ -7,7 +7,7 @@ import { GetAnimeDto } from './dto/get-anime.dto';
 import { PaginatedAnimeResponseDto } from './dto/paginated-anime-response.dto';
 import { StatsResponseDto } from './dto/stats-response.dto';
 
-@ApiTags('Аниме')
+@ApiTags('Anime')
 @Controller('anime')
 export class AnimeController {
   constructor(private readonly animeService: AnimeService) {}

@@ -1,25 +1,16 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { AnimeSortField, GetAnimeDto, SortOrder } from './dto/get-anime.dto';
+import { PaginatedAnimeResponseDto } from './dto/paginated-anime-response.dto';
 
-export interface PaginatedAnimeResponse {
-  data: any[];
-  pagination: {
-    page: number;
-    limit: number;
-    total: number;
-    total_pages: number;
-    has_next: boolean;
-    has_prev: boolean;
-  };
-}
 
 @Injectable()
 export class AnimeService {
   constructor(private prisma: PrismaService) {}
 
-  async findAll(dto: GetAnimeDto): Promise<PaginatedAnimeResponse> {
-    const { page = 1, limit = 20, search, sort_by, sort_order, year_from, year_to, only_ongoing, only_completed, genre } = dto;
+  async findAll(dto: GetAnimeDto): Promise<PaginatedAnimeResponseDto> {
+    const { page = 1, limit = 20, search, sort_by, sort_order, year_from, year_to, status, genre, rating_from, rating_to } = dto;
 
     if (page < 1) {
       throw new BadRequestException('Номер страницы должен быть больше 0');
@@ -31,8 +22,8 @@ export class AnimeService {
 
     const skip = (page - 1) * limit;
 
-    const where: any = {};
-    let countWhere: any = {};
+    const where: Prisma.AnimeWhereInput = {};
+    let countWhere: Prisma.AnimeWhereInput = {};
 
     if (search) {
       where.OR = [
@@ -60,14 +51,27 @@ export class AnimeService {
       }
     }
 
-    if (only_ongoing) {
-      where.all_status = 'ongoing';
-      countWhere.all_status = 'ongoing';
+    if (rating_from || rating_to) {
+      where.shikimori_rating = {};
+      countWhere.shikimori_rating = {};
+      if (rating_from) {
+        where.shikimori_rating.gte = rating_from;
+        countWhere.shikimori_rating.gte = rating_from;
+      }
+      if (rating_to) {
+        where.shikimori_rating.lte = rating_to;
+        countWhere.shikimori_rating.lte = rating_to;
+      }
     }
 
-    if (only_completed) {
-      where.all_status = 'released';
-      countWhere.all_status = 'released';
+    if (status) {
+      if (status === 'unknown') {
+        where.all_status = null;
+        countWhere.all_status = null;
+      } else {
+        where.all_status = status;
+        countWhere.all_status = status;
+      }
     }
 
     if (genre) {
@@ -87,7 +91,7 @@ export class AnimeService {
       };
     }
 
-    const orderBy: any = {};
+    const orderBy: Prisma.AnimeOrderByWithRelationInput = {};
     orderBy[sort_by || AnimeSortField.TITLE] = sort_order || SortOrder.ASC;
 
     const total = await this.prisma.anime.count({ where: countWhere });
@@ -97,45 +101,7 @@ export class AnimeService {
       orderBy,
       skip,
       take: limit,
-      select: {
-        id: true,
-        kodik_id: true,
-        kodik_type: true,
-        link: true,
-        title: true,
-        title_orig: true,
-        other_title: true,
-        year: true,
-        last_season: true,
-        last_episode: true,
-        episodes_count: true,
-        kinopoisk_id: true,
-        imdb_id: true,
-        shikimori_id: true,
-        quality: true,
-        camrip: true,
-        lgbt: true,
-        created_at: true,
-        updated_at: true,
-        description: true,
-        anime_description: true,
-        poster_url: true,
-        anime_poster_url: true,
-        premiere_world: true,
-        aired_at: true,
-        released_at: true,
-        rating_mpaa: true,
-        minimal_age: true,
-        episodes_total: true,
-        episodes_aired: true,
-        imdb_rating: true,
-        imdb_votes: true,
-        shikimori_rating: true,
-        shikimori_votes: true,
-        next_episode_at: true,
-        all_status: true,
-        anime_kind: true,
-        duration: true,
+      include: {
         anime_genres: {
           select: {
             genre: {
@@ -208,45 +174,7 @@ export class AnimeService {
   async findById(id: number) {
     return this.prisma.anime.findUnique({
       where: { id },
-      select: {
-        id: true,
-        kodik_id: true,
-        kodik_type: true,
-        link: true,
-        title: true,
-        title_orig: true,
-        other_title: true,
-        year: true,
-        last_season: true,
-        last_episode: true,
-        episodes_count: true,
-        kinopoisk_id: true,
-        imdb_id: true,
-        shikimori_id: true,
-        quality: true,
-        camrip: true,
-        lgbt: true,
-        created_at: true,
-        updated_at: true,
-        description: true,
-        anime_description: true,
-        poster_url: true,
-        anime_poster_url: true,
-        premiere_world: true,
-        aired_at: true,
-        released_at: true,
-        rating_mpaa: true,
-        minimal_age: true,
-        episodes_total: true,
-        episodes_aired: true,
-        imdb_rating: true,
-        imdb_votes: true,
-        shikimori_rating: true,
-        shikimori_votes: true,
-        next_episode_at: true,
-        all_status: true,
-        anime_kind: true,
-        duration: true,
+      include: {
         anime_genres: {
           select: {
             genre: {
@@ -305,45 +233,7 @@ export class AnimeService {
   async findByKodikId(kodikId: string) {
     return this.prisma.anime.findUnique({
       where: { kodik_id: kodikId },
-      select: {
-        id: true,
-        kodik_id: true,
-        kodik_type: true,
-        link: true,
-        title: true,
-        title_orig: true,
-        other_title: true,
-        year: true,
-        last_season: true,
-        last_episode: true,
-        episodes_count: true,
-        kinopoisk_id: true,
-        imdb_id: true,
-        shikimori_id: true,
-        quality: true,
-        camrip: true,
-        lgbt: true,
-        created_at: true,
-        updated_at: true,
-        description: true,
-        anime_description: true,
-        poster_url: true,
-        anime_poster_url: true,
-        premiere_world: true,
-        aired_at: true,
-        released_at: true,
-        rating_mpaa: true,
-        minimal_age: true,
-        episodes_total: true,
-        episodes_aired: true,
-        imdb_rating: true,
-        imdb_votes: true,
-        shikimori_rating: true,
-        shikimori_votes: true,
-        next_episode_at: true,
-        all_status: true,
-        anime_kind: true,
-        duration: true,
+      include: {
         anime_genres: {
           select: {
             genre: {

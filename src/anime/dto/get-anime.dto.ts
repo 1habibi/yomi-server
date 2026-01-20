@@ -1,5 +1,5 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import { Transform, Type } from 'class-transformer';
+import { Type } from 'class-transformer';
 import { IsEnum, IsInt, IsOptional, IsString, Max, Min } from 'class-validator';
 
 export enum AnimeSortField {
@@ -7,6 +7,13 @@ export enum AnimeSortField {
   YEAR = 'year',
   UPDATED_AT = 'updated_at',
   CREATED_AT = 'created_at'
+}
+
+export enum AnimeStatus {
+  ONGOING = 'ongoing',
+  RELEASED = 'released',
+  ANONS = 'anons',
+  UNKNOWN = 'unknown',
 }
 
 export enum SortOrder {
@@ -18,7 +25,8 @@ export class GetAnimeDto {
   @ApiPropertyOptional({ 
     description: 'Номер страницы для пагинации',
     minimum: 1,
-    default: 1 
+    default: 1,
+    example: 1 // Используйте example (ед.ч) для простых типов
   })
   @IsOptional()
   @Type(() => Number)
@@ -30,7 +38,8 @@ export class GetAnimeDto {
     description: 'Количество элементов на странице',
     minimum: 1,
     maximum: 100,
-    default: 20
+    default: 20,
+    example: 20
   })
   @IsOptional()
   @Type(() => Number)
@@ -50,14 +59,9 @@ export class GetAnimeDto {
   @ApiPropertyOptional({ 
     description: 'Поле для сортировки',
     enum: AnimeSortField,
-    enumName: 'AnimeSortField',
+    enumName: 'AnimeSortField', // Важно для генерации правильного типа в Orval
     default: AnimeSortField.TITLE,
-    examples: [
-      { value: AnimeSortField.TITLE, description: 'Сортировка по названию' },
-      { value: AnimeSortField.YEAR, description: 'Сортировка по году выхода' },
-      { value: AnimeSortField.UPDATED_AT, description: 'Сортировка по дате обновления' },
-      { value: AnimeSortField.CREATED_AT, description: 'Сортировка по дате создания' }
-    ]
+    // УБРАЛИ examples: [...] — Swagger сам покажет список из enum
   })
   @IsOptional()
   @IsEnum(AnimeSortField)
@@ -68,10 +72,7 @@ export class GetAnimeDto {
     enum: SortOrder,
     enumName: 'SortOrder',
     default: SortOrder.ASC,
-    examples: [
-      { value: SortOrder.ASC, description: 'По возрастанию (А-Я, 0-9)' },
-      { value: SortOrder.DESC, description: 'По убыванию (Я-А, 9-0)' }
-    ]
+    // УБРАЛИ examples: [...]
   })
   @IsOptional()
   @IsEnum(SortOrder)
@@ -100,24 +101,14 @@ export class GetAnimeDto {
   year_to?: number;
 
   @ApiPropertyOptional({
-    description: 'Показывать только онгоинги',
-    type: Boolean,
-    default: false
+    description: 'Фильтр по статусу аниме',
+    enum: AnimeStatus,
+    enumName: 'AnimeStatus',
+    example: AnimeStatus.ONGOING,
   })
   @IsOptional()
-  @Type(() => Number)
-  @Transform(({ value }) => value === 'true' || value === true)
-  only_ongoing?: boolean;
-
-  @ApiPropertyOptional({
-    description: 'Показывать только завершенные аниме',
-    type: Boolean,
-    default: false
-  })
-  @IsOptional()
-  @Type(() => Number)
-  @Transform(({ value }) => value === 'true' || value === true)
-  only_completed?: boolean;
+  @IsEnum(AnimeStatus)
+  status?: AnimeStatus;
 
   @ApiPropertyOptional({
     description: 'Фильтр по жанру',
@@ -126,4 +117,28 @@ export class GetAnimeDto {
   @IsOptional()
   @IsString()
   genre?: string;
+
+  @ApiPropertyOptional({
+    description: 'Фильтр по минимальному рейтингу',
+    minimum: 0,
+    maximum: 10,
+    example: 7
+  })
+  @IsOptional()
+  @Type(() => Number)
+  @Min(0)
+  @Max(10)
+  rating_from?: number;
+
+  @ApiPropertyOptional({
+    description: 'Фильтр по максимальному рейтингу',
+    minimum: 0,
+    maximum: 10,
+    example: 9
+  })
+  @IsOptional()
+  @Type(() => Number)
+  @Min(0)
+  @Max(10)
+  rating_to?: number;
 }

@@ -12,7 +12,7 @@ import {
   UnauthorizedException,
   UseGuards
 } from "@nestjs/common";
-import { ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
+import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
 import { User } from "@prisma/client";
 import { Request, Response } from "express";
 import { UserResponseDto } from "src/users/dto/user-response.dto";
@@ -26,7 +26,8 @@ import { JwtAuthGuard } from "./guards/jwt-auth.guard";
 import { CookieManager } from "./managers/cookie.manager";
 import { AuthService } from "./services/auth.service";
 
-@ApiTags("Авторизация (auth)")
+@ApiTags("Authentication")
+@ApiBearerAuth()
 @Controller("auth")
 export class AuthController {
   constructor(

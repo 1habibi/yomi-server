@@ -24,7 +24,7 @@ CREATE TABLE `anime` (
     `poster_url` VARCHAR(191) NULL,
     `anime_poster_url` VARCHAR(191) NULL,
     `premiere_world` DATE NULL,
-    `aired_at` DATE NULL,
+    `aried_at` DATE NULL,
     `released_at` DATE NULL,
     `rating_mpaa` VARCHAR(191) NULL,
     `minimal_age` INTEGER NULL,

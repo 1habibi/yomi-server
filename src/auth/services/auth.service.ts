@@ -2,8 +2,7 @@ import {
   BadRequestException,
   ConflictException,
   Injectable,
-  ServiceUnavailableException,
-  UnauthorizedException,
+  UnauthorizedException
 } from "@nestjs/common";
 import { User } from "@prisma/client";
 import { v4 as uuidv4 } from "uuid";
@@ -53,20 +52,20 @@ export class AuthService {
       },
     });
 
-    try {
-      await this.emailService.sendEmailConfirmation(
-        email,
-        email_confirm_token,
-        name,
-      );
-    } catch (error) {
-      await this.prisma.user.delete({ where: { id: user.id } }).catch(() => {
-        // Игнорируем ошибку удаления, чтобы не скрыть исходную причину.
-      });
-      throw new ServiceUnavailableException(
-        "Не удалось отправить письмо для подтверждения. Попробуйте позже.",
-      );
-    }
+    // try {
+    //   await this.emailService.sendEmailConfirmation(
+    //     email,
+    //     email_confirm_token,
+    //     name,
+    //   );
+    // } catch (error) {
+    //   await this.prisma.user.delete({ where: { id: user.id } }).catch(() => {
+    //     // Игнорируем ошибку удаления, чтобы не скрыть исходную причину.
+    //   });
+    //   throw new ServiceUnavailableException(
+    //     "Не удалось отправить письмо для подтверждения. Попробуйте позже.",
+    //   );
+    // }
 
     return {
       message:
