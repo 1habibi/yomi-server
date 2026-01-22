@@ -6,7 +6,8 @@ export enum AnimeSortField {
   TITLE = 'title',
   YEAR = 'year',
   UPDATED_AT = 'updated_at',
-  CREATED_AT = 'created_at'
+  CREATED_AT = 'created_at',
+  SHIKIMORI_RATING = 'shikimori_rating'
 }
 
 export enum AnimeStatus {
