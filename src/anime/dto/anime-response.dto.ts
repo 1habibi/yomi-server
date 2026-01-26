@@ -143,7 +143,7 @@ export class AnimeResponseDto {
   premiere_world: Date | null;
 
   @ApiProperty({ type: Date, nullable: true })
-  aried_at: Date | null;
+  aired_at: Date | null;
 
   @ApiProperty({ type: Date, nullable: true })
   released_at: Date | null;

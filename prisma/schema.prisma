@@ -28,6 +28,7 @@ model User {
   email                String    @unique
   password             String
   name                 String
+  avatar_url           String?
   role                 Role      @default(USER)
   is_email_confirmed     Boolean   @default(false)
   email_confirm_token    String?
@@ -84,7 +85,7 @@ model Anime {
   poster_url        String?
   anime_poster_url  String?
   premiere_world    DateTime? @db.Date
-  aried_at          DateTime? @db.Date
+  aired_at          DateTime? @db.Date
   released_at       DateTime? @db.Date
   rating_mpaa       String?
   minimal_age       Int?

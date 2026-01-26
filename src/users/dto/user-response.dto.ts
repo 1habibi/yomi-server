@@ -19,14 +19,22 @@ export class UserResponseDto {
   })
   name: string;
 
-  @ApiProperty({ 
+  @ApiProperty({
     example: 'USER',
     enum: ['USER', 'ADMIN'],
     description: 'Роль пользователя'
   })
   role: string;
 
-  @ApiProperty({ 
+  @ApiProperty({
+    type: String,
+    example: 'https://s3.ru-1.storage.selcloud.ru/yomi-avatars/avatars/avatar-123.webp',
+    description: 'URL аватара пользователя',
+    nullable: true,
+  })
+  avatarUrl: string | null;
+
+  @ApiProperty({
     example: true,
     description: 'Подтвержден ли email пользователя'
   })

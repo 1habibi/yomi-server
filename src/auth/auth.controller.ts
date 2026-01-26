@@ -221,6 +221,7 @@ export class AuthController {
       email: user.email,
       name: user.name,
       role: user.role,
+      avatarUrl: user.avatar_url,
       isEmailConfirmed: user.is_email_confirmed,
       createdAt: user.created_at,
       updatedAt: user.updated_at
