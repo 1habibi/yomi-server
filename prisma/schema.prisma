@@ -38,11 +38,12 @@ model User {
   created_at            DateTime  @default(now())
   updated_at            DateTime  @updatedAt
 
-  refresh_tokens RefreshToken[]
-  user_anime     UserAnime[]
-  comments              Comment[]
-  comment_likes         CommentLike[]
-  comment_reports       CommentReport[]
+  refresh_tokens         RefreshToken[]
+  anime_lists            UserAnimeList[]
+  settings               UserSettings?
+  comments               Comment[]
+  comment_likes          CommentLike[]
+  comment_reports        CommentReport[]
   notifications_received Notification[] @relation("NotificationsReceived")
   notifications_created  Notification[] @relation("NotificationsCreated")
 
@@ -112,7 +113,7 @@ model Anime {
   anime_studios     Anime_Studios[]
   blocked_countries Blocked_Countries[]
   blocked_seasons   Blocked_Seasons[]
-  user_anime        UserAnime[]
+  anime_lists       UserAnimeList[]
   comments          Comment[]
 
   @@map("anime")
@@ -222,19 +223,36 @@ model Blocked_Seasons {
   @@map("blocked_seasons")
 }
 
-model UserAnime {
-  id        Int       @id @default(autoincrement())
+model UserAnimeList {
+  id         Int             @id @default(autoincrement())
   user_id    String
   anime_id   Int
-  rating    Int?
-  interaction InteractionType
-  interacted_at DateTime? @default(now())
+  list_type  InteractionType
+  order      Int             @default(0)
+  rating     Int?
+  added_at   DateTime        @default(now())
+  updated_at DateTime        @updatedAt
 
   user  User  @relation(fields: [user_id], references: [id], onDelete: Cascade)
   anime Anime @relation(fields: [anime_id], references: [id], onDelete: Cascade)
 
-  @@unique([user_id, anime_id])
-  @@map("user_anime")
+  @@unique([user_id, anime_id, list_type])
+  @@index([user_id, list_type, order])
+  @@index([user_id, anime_id])
+  @@map("user_anime_lists")
+}
+
+model UserSettings {
+  id                    String   @id @default(cuid())
+  user_id               String   @unique
+  lists_are_public      Boolean  @default(true)
+  show_ratings_publicly Boolean  @default(true)
+  created_at            DateTime @default(now())
+  updated_at            DateTime @updatedAt
+
+  user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@map("user_settings")
 }
 
 enum ReportReason {

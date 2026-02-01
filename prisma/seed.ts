@@ -49,43 +49,43 @@ async function createTestUsers() {
   return users;
 }
 
-async function createUserAnimeInteractions(users: any[], animeIds: number[]) {
-  console.log('Создание взаимодействий пользователей с аниме...');
-
-  let totalInteractions = 0;
-
-  for (const user of users) {
-    const userPreferences = await generateUserPreferences();
-    const userAnimeIds = await selectAnimeForUser(animeIds, userPreferences, INTERACTIONS_PER_USER_MIN, INTERACTIONS_PER_USER_MAX);
-
-    for (const animeId of userAnimeIds) {
-      const interactionType = selectInteractionType(userPreferences);
-      const rating = selectRatingForInteraction(interactionType);
-
-      try {
-        await prisma.userAnime.create({
-          data: {
-            user_id: user.id,
-            anime_id: animeId,
-            interaction: interactionType,
-            rating: rating,
-            interacted_at: faker.date.past({ years: 2 })
-          }
-        });
-
-        totalInteractions++;
-      } catch (error) {
-        if (!error.message.includes('Unique constraint')) {
-          console.error(`Ошибка создания взаимодействия: ${error.message}`);
-        }
-      }
-    }
-
-    console.log(`Создано ${userAnimeIds.length} взаимодействий для пользователя ${user.name}`);
-  }
-
-  console.log(`Всего создано ${totalInteractions} взаимодействий`);
-}
+// async function createUserAnimeInteractions(users: any[], animeIds: number[]) {
+//   console.log('Создание взаимодействий пользователей с аниме...');
+//
+//   let totalInteractions = 0;
+//
+//   for (const user of users) {
+//     const userPreferences = await generateUserPreferences();
+//     const userAnimeIds = await selectAnimeForUser(animeIds, userPreferences, INTERACTIONS_PER_USER_MIN, INTERACTIONS_PER_USER_MAX);
+//
+//     for (const animeId of userAnimeIds) {
+//       const interactionType = selectInteractionType(userPreferences);
+//       const rating = selectRatingForInteraction(interactionType);
+//
+//       try {
+//         await prisma.userAnime.create({
+//           data: {
+//             user_id: user.id,
+//             anime_id: animeId,
+//             interaction: interactionType,
+//             rating: rating,
+//             interacted_at: faker.date.past({ years: 2 })
+//           }
+//         });
+//
+//         totalInteractions++;
+//       } catch (error) {
+//         if (!error.message.includes('Unique constraint')) {
+//           console.error(`Ошибка создания взаимодействия: ${error.message}`);
+//         }
+//       }
+//     }
+//
+//     console.log(`Создано ${userAnimeIds.length} взаимодействий для пользователя ${user.name}`);
+//   }
+//
+//   console.log(`Всего создано ${totalInteractions} взаимодействий`);
+// }
 
 async function generateUserPreferences(): Promise<Record<string, number>> {
   const genres = await getGenresFromDB();
@@ -251,7 +251,7 @@ async function main() {
 
     const users = await createTestUsers();
 
-    await createUserAnimeInteractions(users, animeIds);
+    // await createUserAnimeInteractions(users, animeIds); // Закомментировано - таблица userAnime заменена на userAnimeList
 
     console.log('Seed данные успешно созданы!');
     console.log(`Статистика:`);

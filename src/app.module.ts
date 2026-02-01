@@ -7,8 +7,10 @@ import { EmailModule } from './email/email.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { RedisModule } from './redis/redis.module';
-import { UsersModule } from './users/users.module';
 import { UploadModule } from './upload/upload.module';
+import { UserAnimeModule } from './user-anime/user-anime.module';
+import { UserSettingsModule } from './user-settings/user-settings.module';
+import { UsersModule } from './users/users.module';
 
 @Module({
   imports: [
@@ -22,6 +24,8 @@ import { UploadModule } from './upload/upload.module';
     UploadModule,
     CommentsModule,
     NotificationsModule,
+    UserAnimeModule,
+    UserSettingsModule,
   ],
 })
 export class AppModule {}
