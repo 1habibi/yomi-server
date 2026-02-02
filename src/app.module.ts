@@ -7,6 +7,7 @@ import { EmailModule } from './email/email.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { RedisModule } from './redis/redis.module';
+import { ReviewsModule } from './reviews/reviews.module';
 import { UploadModule } from './upload/upload.module';
 import { UserAnimeModule } from './user-anime/user-anime.module';
 import { UserSettingsModule } from './user-settings/user-settings.module';
@@ -26,6 +27,7 @@ import { UsersModule } from './users/users.module';
     NotificationsModule,
     UserAnimeModule,
     UserSettingsModule,
+    ReviewsModule,
   ],
 })
 export class AppModule {}

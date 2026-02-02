@@ -152,4 +152,28 @@ export class NotificationsService {
       count: result.count,
     };
   }
+
+  async createReviewApprovedNotification(reviewId: number, userId: string, moderatorId: string): Promise<void> {
+    await this.prisma.notification.create({
+      data: {
+        type: 'REVIEW_APPROVED',
+        user_id: userId,
+        actor_id: moderatorId,
+      },
+    });
+  }
+
+  async createReviewRejectedNotification(
+    reviewId: number,
+    userId: string,
+    moderatorId: string,
+  ): Promise<void> {
+    await this.prisma.notification.create({
+      data: {
+        type: 'REVIEW_REJECTED',
+        user_id: userId,
+        actor_id: moderatorId,
+        },
+    });
+  }
 }

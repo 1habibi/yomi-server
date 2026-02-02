@@ -77,7 +77,6 @@ export class UserAnimeService {
         user_id: userId,
         anime_id: dto.anime_id,
         list_type: dto.list_type,
-        rating: dto.rating,
         order: maxOrder + 1,
       },
     });
@@ -135,14 +134,12 @@ export class UserAnimeService {
       throw new NotFoundException(`Аниме с ID ${animeId} не найдено в ваших списках`);
     }
 
-    await this.prisma.userAnimeList.updateMany({
+    await this.prisma.userAnimeRating.upsert({
       where: {
-        user_id: userId,
-        anime_id: animeId,
+        user_id_anime_id: { user_id: userId, anime_id: animeId },
       },
-      data: {
-        rating: dto.rating,
-      },
+      update: { rating: dto.rating },
+      create: { user_id: userId, anime_id: animeId, rating: dto.rating },
     });
 
     const status = await this.getAnimeStatus(userId, animeId);
@@ -201,11 +198,17 @@ export class UserAnimeService {
 
     const firstList = lists[0];
 
+    const userRating = await this.prisma.userAnimeRating.findUnique({
+      where: {
+        user_id_anime_id: { user_id: userId, anime_id: animeId },
+      },
+    });
+
     return {
       id: firstList.id,
       anime: firstList.anime,
       list_types: lists.map((l) => l.list_type),
-      rating: firstList.rating,
+      rating: userRating?.rating ?? null,
       added_at: firstList.added_at,
       updated_at: firstList.updated_at,
     };
@@ -225,7 +228,22 @@ export class UserAnimeService {
       orderBy: this.getOrderBy(sortBy),
     });
 
-    const animeList = this.groupAnimeByListTypes(allLists);
+    const ratings = await this.prisma.userAnimeRating.findMany({
+      where: { user_id: userId },
+    });
+
+    const ratingsMap = new Map<number, number>();
+    ratings.forEach((r) => ratingsMap.set(r.anime_id, r.rating));
+
+    let animeList = this.groupAnimeByListTypes(allLists, ratingsMap);
+
+    if (sortBy === 'rating') {
+      animeList = animeList.sort((a, b) => {
+        const ratingA = a.rating ?? 0;
+        const ratingB = b.rating ?? 0;
+        return ratingB - ratingA; // По убыванию
+      });
+    }
 
     const response: UserListsResponseDto = {
       watching: animeList.filter((a) => a.list_types.includes(InteractionType.WATCHING)),
@@ -264,16 +282,36 @@ export class UserAnimeService {
       },
     });
 
+    const ratings = await this.prisma.userAnimeRating.findMany({
+      where: {
+        user_id: userId,
+        anime_id: { in: animeIds },
+      },
+    });
+
+    const ratingsMap = new Map<number, number>();
+    ratings.forEach((r) => ratingsMap.set(r.anime_id, r.rating));
+
     const listTypesMap = this.buildListTypesMap(allListsForAnime);
 
-    return lists.map((list) => ({
+    let result = lists.map((list) => ({
       id: list.id,
       anime: list.anime,
       list_types: listTypesMap.get(list.anime_id) || [list.list_type],
-      rating: list.rating,
+      rating: ratingsMap.get(list.anime_id) ?? null,
       added_at: list.added_at,
       updated_at: list.updated_at,
     }));
+
+    if (sortBy === 'rating') {
+      result = result.sort((a, b) => {
+        const ratingA = a.rating ?? 0;
+        const ratingB = b.rating ?? 0;
+        return ratingB - ratingA; // По убыванию
+      });
+    }
+
+    return result;
   }
 
   private validateListConflicts(
@@ -323,7 +361,7 @@ export class UserAnimeService {
       case 'date':
         return { added_at: 'desc' as const };
       case 'rating':
-        return { rating: 'desc' as const };
+        return { added_at: 'desc' as const };
       case 'title':
         return { anime: { title: 'asc' as const } };
       case 'custom':
@@ -332,7 +370,10 @@ export class UserAnimeService {
     }
   }
 
-  private groupAnimeByListTypes(lists: any[]): UserAnimeResponseDto[] {
+  private groupAnimeByListTypes(
+    lists: any[],
+    ratingsMap: Map<number, number>,
+  ): UserAnimeResponseDto[] {
     const animeMap = new Map<number, UserAnimeResponseDto>();
 
     for (const list of lists) {
@@ -341,7 +382,7 @@ export class UserAnimeService {
           id: list.id,
           anime: list.anime,
           list_types: [],
-          rating: list.rating,
+          rating: ratingsMap.get(list.anime_id) ?? null,
           added_at: list.added_at,
           updated_at: list.updated_at,
         });

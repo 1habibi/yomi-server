@@ -46,6 +46,10 @@ model User {
   comment_reports        CommentReport[]
   notifications_received Notification[] @relation("NotificationsReceived")
   notifications_created  Notification[] @relation("NotificationsCreated")
+  reviews_authored       Review[]
+  reviews_moderated      Review[]       @relation("ModeratedReviews")
+  review_likes           ReviewLike[]
+  anime_ratings          UserAnimeRating[]
 
   @@map("users")
 }
@@ -115,6 +119,8 @@ model Anime {
   blocked_seasons   Blocked_Seasons[]
   anime_lists       UserAnimeList[]
   comments          Comment[]
+  reviews           Review[]
+  user_ratings      UserAnimeRating[]
 
   @@map("anime")
 }
@@ -229,7 +235,6 @@ model UserAnimeList {
   anime_id   Int
   list_type  InteractionType
   order      Int             @default(0)
-  rating     Int?
   added_at   DateTime        @default(now())
   updated_at DateTime        @updatedAt
 
@@ -263,9 +268,17 @@ enum ReportReason {
   OTHER
 }
 
+enum ReviewStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
 enum NotificationType {
   COMMENT_REPLY
   COMMENT_LIKE
+  REVIEW_APPROVED
+  REVIEW_REJECTED
 }
 
 model Comment {
@@ -343,4 +356,78 @@ model Notification {
   @@index([user_id, is_read])
   @@index([created_at])
   @@map("notifications")
+}
+
+model UserAnimeRating {
+  id         Int      @id @default(autoincrement())
+  user_id    String
+  anime_id   Int
+  rating     Int
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  user  User  @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  anime Anime @relation(fields: [anime_id], references: [id], onDelete: Cascade)
+
+  @@unique([user_id, anime_id])
+  @@index([user_id])
+  @@index([anime_id])
+  @@index([rating])
+  @@map("user_anime_ratings")
+}
+
+model Review {
+  id                  Int           @id @default(autoincrement())
+  user_id             String
+  anime_id            Int
+
+  content             String        @db.Text
+  overall_rating      Int
+
+  story_rating        Int?
+  animation_rating    Int?
+  music_rating        Int?
+  characters_rating   Int?
+  voice_acting_rating Int?
+
+  has_spoilers        Boolean       @default(false)
+
+  status              ReviewStatus  @default(PENDING)
+  rejection_reason    String?       @db.Text
+  moderated_by        String?
+  moderated_at        DateTime?
+
+  likes_count         Int           @default(0)
+  dislikes_count      Int           @default(0)
+
+  created_at          DateTime      @default(now())
+  updated_at          DateTime      @updatedAt
+
+  user       User         @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  anime      Anime        @relation(fields: [anime_id], references: [id], onDelete: Cascade)
+  moderator  User?        @relation("ModeratedReviews", fields: [moderated_by], references: [id], onDelete: SetNull)
+  likes      ReviewLike[]
+
+  @@unique([user_id, anime_id])
+  @@index([anime_id, status])
+  @@index([user_id])
+  @@index([status])
+  @@index([overall_rating])
+  @@index([created_at])
+  @@map("reviews")
+}
+
+model ReviewLike {
+  id         Int      @id @default(autoincrement())
+  review_id  Int
+  user_id    String
+  is_like    Boolean
+  created_at DateTime @default(now())
+
+  review Review @relation(fields: [review_id], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@unique([review_id, user_id])
+  @@index([review_id])
+  @@map("review_likes")
 }
