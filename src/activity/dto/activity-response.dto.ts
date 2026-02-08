@@ -9,6 +9,7 @@ export class ActivityUserDto {
   name: string;
 
   @ApiProperty({
+    type: String,
     example: 'https://s3.ru-1.storage.selcloud.ru/yomi-avatars/avatars/avatar-123.webp',
     nullable: true,
   })
@@ -26,6 +27,7 @@ export class ActivityAnimeDto {
   title_orig: string | null;
 
   @ApiProperty({
+    type: String,
     example: 'https://example.com/poster.jpg',
     nullable: true,
   })
