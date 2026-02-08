@@ -9,12 +9,14 @@ export class MessageUserDto {
   name: string;
 
   @ApiProperty({
+    type: String,
     example: 'https://s3.ru-1.storage.selcloud.ru/yomi-avatars/avatars/avatar-123.webp',
     nullable: true,
   })
   avatar_url: string | null;
 
   @ApiProperty({
+    type: Boolean,
     example: true,
     description: 'Онлайн ли пользователь (null если скрыл статус)',
     nullable: true,

@@ -14,6 +14,7 @@ export class PublicProfileResponseDto {
   name: string;
 
   @ApiProperty({
+    type: String,
     example: 'https://s3.ru-1.storage.selcloud.ru/yomi-avatars/avatars/avatar-123.webp',
     description: 'URL аватара',
     nullable: true,
@@ -39,6 +40,7 @@ export class PublicProfileResponseDto {
   following_count: number;
 
   @ApiProperty({
+    type: Boolean,
     example: true,
     description: 'Подписан ли текущий пользователь на этого',
     nullable: true,
@@ -46,6 +48,7 @@ export class PublicProfileResponseDto {
   is_following?: boolean | null;
 
   @ApiProperty({
+    type: Boolean,
     example: false,
     description: 'Подписан ли этот пользователь на текущего',
     nullable: true,
@@ -53,6 +56,7 @@ export class PublicProfileResponseDto {
   is_followed_by?: boolean | null;
 
   @ApiProperty({
+    type: Boolean,
     example: false,
     description: 'Заблокирован ли этот пользователь текущим',
     nullable: true,
@@ -60,6 +64,7 @@ export class PublicProfileResponseDto {
   is_blocked?: boolean | null;
 
   @ApiProperty({
+    type: Boolean,
     example: true,
     description: 'Онлайн ли пользователь (null если скрыл статус)',
     nullable: true,

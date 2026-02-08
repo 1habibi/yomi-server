@@ -14,6 +14,7 @@ export class FollowUserDto {
   name: string;
 
   @ApiProperty({
+    type: String,
     example: 'https://s3.ru-1.storage.selcloud.ru/yomi-avatars/avatars/avatar-123.webp',
     description: 'URL аватара',
     nullable: true,
