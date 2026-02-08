@@ -1,5 +1,6 @@
 import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
-import { InteractionType, UserAnimeList } from '@prisma/client';
+import { ActivityType, InteractionType, UserAnimeList } from '@prisma/client';
+import { ActivityService } from '../activity/activity.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { UserSettingsService } from '../user-settings/user-settings.service';
 import { AddToListDto } from './dto/add-to-list.dto';
@@ -25,6 +26,7 @@ export class UserAnimeService {
   constructor(
     private prisma: PrismaService,
     private userSettingsService: UserSettingsService,
+    private activityService: ActivityService,
   ) {}
 
   private static readonly PRIMARY_STATUSES: InteractionType[] = [
@@ -81,6 +83,13 @@ export class UserAnimeService {
       },
     });
 
+    await this.activityService.createActivity({
+      userId,
+      type: ActivityType.ANIME_ADDED_TO_LIST,
+      animeId: dto.anime_id,
+      metadata: { list_type: dto.list_type },
+    });
+
     const status = await this.getAnimeStatus(userId, dto.anime_id);
     if (!status) {
       throw new Error('Не удалось получить статус аниме после создания');
@@ -134,12 +143,29 @@ export class UserAnimeService {
       throw new NotFoundException(`Аниме с ID ${animeId} не найдено в ваших списках`);
     }
 
+    const existingRating = await this.prisma.userAnimeRating.findUnique({
+      where: {
+        user_id_anime_id: { user_id: userId, anime_id: animeId },
+      },
+    });
+
     await this.prisma.userAnimeRating.upsert({
       where: {
         user_id_anime_id: { user_id: userId, anime_id: animeId },
       },
       update: { rating: dto.rating },
       create: { user_id: userId, anime_id: animeId, rating: dto.rating },
+    });
+
+    // Создать запись об активности
+    await this.activityService.createActivity({
+      userId,
+      type: ActivityType.ANIME_RATING_CHANGED,
+      animeId,
+      metadata: {
+        old_rating: existingRating?.rating ?? null,
+        new_rating: dto.rating,
+      },
     });
 
     const status = await this.getAnimeStatus(userId, animeId);

@@ -4,7 +4,8 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { Prisma, Review, ReviewLike, ReviewStatus } from '@prisma/client';
+import { ActivityType, Prisma, Review, ReviewLike, ReviewStatus } from '@prisma/client';
+import { ActivityService } from '../activity/activity.service';
 import { NotificationsService } from '../notifications/notifications.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateReviewDto } from './dto/create-review.dto';
@@ -38,6 +39,7 @@ export class ReviewsService {
   constructor(
     private prisma: PrismaService,
     private notificationsService: NotificationsService,
+    private activityService: ActivityService,
   ) {}
 
   async create(
@@ -79,6 +81,14 @@ export class ReviewsService {
         status: ReviewStatus.PENDING,
       },
       include: this.REVIEW_INCLUDE,
+    });
+
+    await this.activityService.createActivity({
+      userId,
+      type: ActivityType.REVIEW_CREATED,
+      animeId: dto.anime_id,
+      reviewId: review.id,
+      metadata: { overall_rating: dto.overall_rating },
     });
 
     return this.mapToResponseDto(review, null);

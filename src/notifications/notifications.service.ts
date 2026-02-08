@@ -1,13 +1,17 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
+import { WebSocketGatewayHandler } from '../websocket/websocket.gateway';
 import { GetNotificationsDto } from './dto/get-notifications.dto';
 import { NotificationResponseDto } from './dto/notification-response.dto';
 import { PaginatedNotificationsResponseDto } from './dto/paginated-notifications-response.dto';
 
 @Injectable()
 export class NotificationsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private websocketGateway: WebSocketGatewayHandler,
+  ) {}
 
   async findAll(
     userId: string,
@@ -154,12 +158,36 @@ export class NotificationsService {
   }
 
   async createReviewApprovedNotification(reviewId: number, userId: string, moderatorId: string): Promise<void> {
-    await this.prisma.notification.create({
+    const notification = await this.prisma.notification.create({
       data: {
         type: 'REVIEW_APPROVED',
         user_id: userId,
         actor_id: moderatorId,
       },
+      include: {
+        actor: {
+          select: {
+            id: true,
+            name: true,
+            avatar_url: true,
+          },
+        },
+      },
+    });
+
+    this.websocketGateway.sendNotificationToUser(userId, {
+      id: notification.id,
+      type: notification.type,
+      actor: {
+        id: notification.actor.id,
+        name: notification.actor.name,
+        avatar_url: notification.actor.avatar_url,
+      },
+      comment_id: notification.comment_id,
+      anime_id: notification.anime_id,
+      is_read: notification.is_read,
+      read_at: notification.read_at,
+      created_at: notification.created_at,
     });
   }
 
@@ -168,12 +196,36 @@ export class NotificationsService {
     userId: string,
     moderatorId: string,
   ): Promise<void> {
-    await this.prisma.notification.create({
+    const notification = await this.prisma.notification.create({
       data: {
         type: 'REVIEW_REJECTED',
         user_id: userId,
         actor_id: moderatorId,
+      },
+      include: {
+        actor: {
+          select: {
+            id: true,
+            name: true,
+            avatar_url: true,
+          },
         },
+      },
+    });
+
+    this.websocketGateway.sendNotificationToUser(userId, {
+      id: notification.id,
+      type: notification.type,
+      actor: {
+        id: notification.actor.id,
+        name: notification.actor.name,
+        avatar_url: notification.actor.avatar_url,
+      },
+      comment_id: notification.comment_id,
+      anime_id: notification.anime_id,
+      is_read: notification.is_read,
+      read_at: notification.read_at,
+      created_at: notification.created_at,
     });
   }
 }

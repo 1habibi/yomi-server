@@ -52,6 +52,18 @@ export class AuthService {
       },
     });
 
+    await this.prisma.userSettings.create({
+      data: {
+        user_id: user.id,
+        lists_are_public: true,
+        show_ratings_publicly: true,
+        lists_visibility: 'PUBLIC',
+        activity_visibility: 'PUBLIC',
+        message_visibility: 'EVERYONE',
+        show_online_status: true,
+      },
+    });
+
     // try {
     //   await this.emailService.sendEmailConfirmation(
     //     email,

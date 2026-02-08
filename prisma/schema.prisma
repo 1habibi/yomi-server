@@ -51,6 +51,15 @@ model User {
   review_likes           ReviewLike[]
   anime_ratings          UserAnimeRating[]
 
+  followers              UserFollow[]   @relation("UserFollowing")
+  following              UserFollow[]   @relation("UserFollowers")
+  blocked_users          UserBlock[]    @relation("UserBlocker")
+  blocked_by             UserBlock[]    @relation("UserBlocked")
+  activities             UserActivity[]
+  conversations_1        Conversation[] @relation("ConversationUser1")
+  conversations_2        Conversation[] @relation("ConversationUser2")
+  messages_sent          Message[]
+
   @@map("users")
 }
 
@@ -121,6 +130,7 @@ model Anime {
   comments          Comment[]
   reviews           Review[]
   user_ratings      UserAnimeRating[]
+  activities        UserActivity[]
 
   @@map("anime")
 }
@@ -248,12 +258,18 @@ model UserAnimeList {
 }
 
 model UserSettings {
-  id                    String   @id @default(cuid())
-  user_id               String   @unique
-  lists_are_public      Boolean  @default(true)
-  show_ratings_publicly Boolean  @default(true)
-  created_at            DateTime @default(now())
-  updated_at            DateTime @updatedAt
+  id                    String            @id @default(cuid())
+  user_id               String            @unique
+  lists_are_public      Boolean           @default(true)
+  show_ratings_publicly Boolean           @default(true)
+
+  lists_visibility      Visibility        @default(PUBLIC)
+  activity_visibility   Visibility        @default(PUBLIC)
+  message_visibility    MessageVisibility @default(EVERYONE)
+  show_online_status    Boolean           @default(true)
+
+  created_at            DateTime          @default(now())
+  updated_at            DateTime          @updatedAt
 
   user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
@@ -279,6 +295,34 @@ enum NotificationType {
   COMMENT_LIKE
   REVIEW_APPROVED
   REVIEW_REJECTED
+  NEW_FOLLOWER
+  NEW_MESSAGE
+}
+
+enum Visibility {
+  PUBLIC
+  FOLLOWERS_ONLY
+  PRIVATE
+}
+
+enum MessageVisibility {
+  EVERYONE
+  FOLLOWERS_ONLY
+  MUTUAL_ONLY
+}
+
+enum ActivityType {
+  ANIME_ADDED_TO_LIST
+  ANIME_STATUS_CHANGED
+  ANIME_RATING_CHANGED
+  REVIEW_CREATED
+  COMMENT_CREATED
+}
+
+enum MessageStatus {
+  SENT
+  DELIVERED
+  READ
 }
 
 model Comment {
@@ -430,4 +474,94 @@ model ReviewLike {
   @@unique([review_id, user_id])
   @@index([review_id])
   @@map("review_likes")
+}
+
+model UserFollow {
+  id           Int      @id @default(autoincrement())
+  follower_id  String  
+  following_id String
+  created_at   DateTime @default(now())
+
+  follower  User @relation("UserFollowers", fields: [follower_id], references: [id], onDelete: Cascade)
+  following User @relation("UserFollowing", fields: [following_id], references: [id], onDelete: Cascade)
+
+  @@unique([follower_id, following_id])
+  @@index([follower_id])
+  @@index([following_id])
+  @@map("user_follows")
+}
+
+model UserBlock {
+  id         Int      @id @default(autoincrement())
+  blocker_id String
+  blocked_id String  
+  created_at DateTime @default(now())
+
+  blocker User @relation("UserBlocker", fields: [blocker_id], references: [id], onDelete: Cascade)
+  blocked User @relation("UserBlocked", fields: [blocked_id], references: [id], onDelete: Cascade)
+
+  @@unique([blocker_id, blocked_id])
+  @@index([blocker_id])
+  @@index([blocked_id])
+  @@map("user_blocks")
+}
+
+model UserActivity {
+  id         Int          @id @default(autoincrement())
+  user_id    String
+  type       ActivityType
+  anime_id   Int?
+  review_id  Int?
+  comment_id Int?
+  metadata   Json?
+  created_at DateTime     @default(now())
+
+  user  User   @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  anime Anime? @relation(fields: [anime_id], references: [id], onDelete: SetNull)
+
+  @@index([user_id, created_at])
+  @@index([anime_id])
+  @@map("user_activities")
+}
+
+model Conversation {
+  id              Int       @id @default(autoincrement())
+  participant_1   String
+  participant_2   String
+  last_message_at DateTime?
+  created_at      DateTime  @default(now())
+  updated_at      DateTime  @updatedAt
+
+  user_1   User      @relation("ConversationUser1", fields: [participant_1], references: [id], onDelete: Cascade)
+  user_2   User      @relation("ConversationUser2", fields: [participant_2], references: [id], onDelete: Cascade)
+  messages Message[]
+
+  @@unique([participant_1, participant_2])
+  @@index([participant_1, last_message_at])
+  @@index([participant_2, last_message_at])
+  @@map("conversations")
+}
+
+model Message {
+  id              Int           @id @default(autoincrement())
+  conversation_id Int
+  sender_id       String
+  content         String        @db.Text
+  image_url       String?
+  status          MessageStatus @default(SENT)
+  delivered_at    DateTime?
+  read_at         DateTime?
+  is_edited       Boolean       @default(false)
+  edited_at       DateTime?
+  is_deleted      Boolean       @default(false)
+  deleted_at      DateTime?
+  created_at      DateTime      @default(now())
+  updated_at      DateTime      @updatedAt
+
+  conversation Conversation @relation(fields: [conversation_id], references: [id], onDelete: Cascade)
+  sender       User         @relation(fields: [sender_id], references: [id], onDelete: Cascade)
+
+  @@index([conversation_id, created_at])
+  @@index([sender_id])
+  @@map("messages")
 }

@@ -1,5 +1,6 @@
 import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
-import { Prisma } from '@prisma/client';
+import { ActivityType, Prisma } from '@prisma/client';
+import { ActivityService } from '../activity/activity.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { CommentResponseDto } from './dto/comment-response.dto';
 import { CreateCommentDto } from './dto/create-comment.dto';
@@ -11,7 +12,10 @@ import { UpdateCommentDto } from './dto/update-comment.dto';
 
 @Injectable()
 export class CommentsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private activityService: ActivityService,
+  ) {}
 
   async create(
     animeId: number,
@@ -81,6 +85,14 @@ export class CommentsService {
         });
       }
     }
+
+    await this.activityService.createActivity({
+      userId,
+      type: ActivityType.COMMENT_CREATED,
+      animeId,
+      commentId: comment.id,
+      metadata: { parent_id: dto.parent_id },
+    });
 
     return this.formatCommentResponse(comment, userId);
   }
