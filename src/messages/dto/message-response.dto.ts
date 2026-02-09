@@ -38,6 +38,7 @@ export class MessageResponseDto {
   content: string;
 
   @ApiProperty({
+    type: String,
     example: 'https://example.com/image.jpg',
     nullable: true,
   })
@@ -46,16 +47,16 @@ export class MessageResponseDto {
   @ApiProperty({ enum: MessageStatus, example: MessageStatus.SENT })
   status: MessageStatus;
 
-  @ApiProperty({ example: '2025-02-03T12:01:00.000Z', nullable: true })
+  @ApiProperty({ type: Date, example: '2025-02-03T12:01:00.000Z', nullable: true })
   delivered_at: Date | null;
 
-  @ApiProperty({ example: '2025-02-03T12:02:00.000Z', nullable: true })
+  @ApiProperty({ type: Date, example: '2025-02-03T12:02:00.000Z', nullable: true })
   read_at: Date | null;
 
   @ApiProperty({ example: false })
   is_edited: boolean;
 
-  @ApiProperty({ example: null, nullable: true })
+  @ApiProperty({ type: Date, example: null, nullable: true })
   edited_at: Date | null;
 
   @ApiProperty({ example: false })
@@ -75,7 +76,7 @@ export class ConversationResponseDto {
   @ApiProperty({ type: MessageResponseDto, nullable: true })
   last_message: MessageResponseDto | null;
 
-  @ApiProperty({ example: '2025-02-03T12:00:00.000Z', nullable: true })
+  @ApiProperty({ type: Date, example: '2025-02-03T12:00:00.000Z', nullable: true })
   last_message_at: Date | null;
 
   @ApiProperty({ example: 5 })

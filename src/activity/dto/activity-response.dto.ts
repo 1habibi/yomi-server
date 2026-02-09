@@ -20,10 +20,10 @@ export class ActivityAnimeDto {
   @ApiProperty({ example: 123 })
   id: number;
 
-  @ApiProperty({ example: 'Название аниме', nullable: true })
+  @ApiProperty({ type: String, example: 'Название аниме', nullable: true })
   title: string | null;
 
-  @ApiProperty({ example: 'Original Title', nullable: true })
+  @ApiProperty({ type: String, example: 'Original Title', nullable: true })
   title_orig: string | null;
 
   @ApiProperty({

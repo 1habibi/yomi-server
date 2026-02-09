@@ -17,7 +17,12 @@ import { User } from '@prisma/client';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { DiscoveryResponseDto } from './dto/discovery.dto';
-import { PersonalRecommendationsResponseDto } from './dto/recommendation-response.dto';
+import {
+  PersonalRecommendationsResponseDto,
+  PopularAnimeResponseDto,
+  SimilarAnimeResponseDto,
+  TrendingAnimeResponseDto,
+} from './dto/recommendation-response.dto';
 import { RecommendationsService } from './recommendations.service';
 
 @ApiTags('Recommendations')
@@ -41,6 +46,7 @@ export class RecommendationsController {
   @Get('similar/:animeId')
   @ApiOperation({ summary: 'Похожие аниме' })
   @ApiQuery({ name: 'top_n', required: false, type: Number })
+  @ApiResponse({ status: 200, type: SimilarAnimeResponseDto })
   async getSimilar(
     @Param('animeId', ParseIntPipe) animeId: number,
     @Query('top_n') topN = 10,
@@ -51,6 +57,7 @@ export class RecommendationsController {
   @Get('popular')
   @ApiOperation({ summary: 'Популярные аниме' })
   @ApiQuery({ name: 'top_n', required: false, type: Number })
+  @ApiResponse({ status: 200, type: PopularAnimeResponseDto })
   async getPopular(@Query('top_n') topN = 20) {
     return this.recommendationsService.getPopular(Number(topN));
   }
@@ -58,6 +65,7 @@ export class RecommendationsController {
   @Get('trending')
   @ApiOperation({ summary: 'Трендовые аниме' })
   @ApiQuery({ name: 'top_n', required: false, type: Number })
+  @ApiResponse({ status: 200, type: TrendingAnimeResponseDto })
   async getTrending(@Query('top_n') topN = 20) {
     return this.recommendationsService.getTrending(Number(topN));
   }

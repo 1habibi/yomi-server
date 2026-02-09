@@ -15,22 +15,22 @@ export class RecommendationAnimeDto {
   @ApiProperty({ example: 123 })
   id: number;
 
-  @ApiProperty({ example: 'Наруто', nullable: true })
+  @ApiProperty({ example: 'Наруто', type: String, nullable: true })
   title: string | null;
 
-  @ApiProperty({ example: 'Naruto', nullable: true })
+  @ApiProperty({ example: 'Naruto', type: String, nullable: true })
   title_orig: string | null;
 
-  @ApiProperty({ example: 'https://...', nullable: true })
+  @ApiProperty({ example: 'https://...', type: String, nullable: true })
   poster_url: string | null;
 
-  @ApiProperty({ example: 7.8, nullable: true })
+  @ApiProperty({ example: 7.8, type: Number, nullable: true })
   shikimori_rating: number | null;
 
-  @ApiProperty({ example: 2002, nullable: true })
+  @ApiProperty({ example: 2002, type: Number, nullable: true })
   year: number | null;
 
-  @ApiProperty({ example: 'tv', nullable: true })
+  @ApiProperty({ example: 'tv', type: String, nullable: true })
   anime_kind: string | null;
 }
 
@@ -48,4 +48,31 @@ export class PersonalRecommendationsResponseDto {
 
   @ApiProperty({ example: 'active' })
   user_type: string;
+}
+
+export class SimilarAnimeResponseDto {
+  @ApiProperty({ example: 123 })
+  anime_id: number;
+
+  @ApiProperty({ type: [PersonalRecommendationDto] })
+  similar: PersonalRecommendationDto[];
+
+  @ApiProperty({ example: 10 })
+  total: number;
+}
+
+export class PopularAnimeResponseDto {
+  @ApiProperty({ type: [PersonalRecommendationDto] })
+  items: PersonalRecommendationDto[];
+
+  @ApiProperty({ example: 20 })
+  total: number;
+}
+
+export class TrendingAnimeResponseDto {
+  @ApiProperty({ type: [PersonalRecommendationDto] })
+  items: PersonalRecommendationDto[];
+
+  @ApiProperty({ example: 20 })
+  total: number;
 }

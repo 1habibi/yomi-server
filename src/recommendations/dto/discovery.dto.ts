@@ -85,16 +85,16 @@ export class DiscoveryResultDto {
   @ApiProperty({ example: 0.856 })
   score: number;
 
-  @ApiProperty({ example: 'Serial Experiments Lain', nullable: true })
+  @ApiProperty({ type: String, example: 'Serial Experiments Lain', nullable: true })
   title: string | null;
 
   @ApiProperty({ example: ['Психологическое', 'Драма'], type: [String] })
   genres: string[];
 
-  @ApiProperty({ example: 1998, nullable: true })
+  @ApiProperty({ type: Number, example: 1998, nullable: true })
   year: number | null;
 
-  @ApiProperty({ example: 8.1, nullable: true })
+  @ApiProperty({ type: Number, example: 8.1, nullable: true })
   rating: number | null;
 
   @ApiProperty({ type: ScoreBreakdownDto })

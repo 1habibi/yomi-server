@@ -21,6 +21,10 @@ import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CreateWatchSessionDto } from './dto/create-watch-session.dto';
 import { UpdateWatchSessionDto } from './dto/update-watch-session.dto';
+import {
+  EndWatchSessionResponseDto,
+  WatchSessionResponseDto,
+} from './dto/watch-session-response.dto';
 import { WatchTrackingService } from './watch-tracking.service';
 
 @ApiTags('Watch Tracking')
@@ -32,7 +36,11 @@ export class WatchTrackingController {
 
   @Post('sessions')
   @ApiOperation({ summary: 'Создать сессию просмотра' })
-  @ApiResponse({ status: HttpStatus.CREATED, description: 'Сессия создана' })
+  @ApiResponse({
+    status: HttpStatus.CREATED,
+    description: 'Сессия создана',
+    type: WatchSessionResponseDto,
+  })
   async createSession(
     @CurrentUser() user: User,
     @Body(new ValidationPipe({ transform: true })) dto: CreateWatchSessionDto,
@@ -52,6 +60,11 @@ export class WatchTrackingController {
 
   @Patch('sessions/:id/end')
   @ApiOperation({ summary: 'Завершить сессию просмотра' })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Сессия завершена',
+    type: EndWatchSessionResponseDto,
+  })
   async endSession(
     @CurrentUser() user: User,
     @Param('id', ParseIntPipe) sessionId: number,
