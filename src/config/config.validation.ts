@@ -16,4 +16,5 @@ export const configValidationSchema = Joi.object({
   MAIL_FROM: Joi.string().required(),
   APP_URL: Joi.string().default("http://localhost:3000"),
   FRONTEND_URL: Joi.string().default("http://localhost:5173"),
+  AI_SERVICE_URL: Joi.string().default("http://localhost:8001"),
 });

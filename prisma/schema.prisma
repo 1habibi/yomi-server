@@ -59,6 +59,9 @@ model User {
   conversations_1        Conversation[] @relation("ConversationUser1")
   conversations_2        Conversation[] @relation("ConversationUser2")
   messages_sent          Message[]
+  watch_sessions         WatchSession[]
+  page_views             AnimePageView[]
+  search_queries         SearchQuery[]
 
   @@map("users")
 }
@@ -131,6 +134,9 @@ model Anime {
   reviews           Review[]
   user_ratings      UserAnimeRating[]
   activities        UserActivity[]
+  watch_sessions    WatchSession[]
+  page_views        AnimePageView[]
+  search_clicks     SearchQuery[]
 
   @@map("anime")
 }
@@ -564,4 +570,69 @@ model Message {
   @@index([conversation_id, created_at])
   @@index([sender_id])
   @@map("messages")
+}
+
+model WatchSession {
+  id                Int       @id @default(autoincrement())
+  user_id           String
+  anime_id          Int
+  episode           Int?
+  season            Int?
+  translation_id    Int?
+  translation_title String?
+  duration_seconds  Int
+  watched_seconds   Int
+  max_position      Int
+  completion_ratio  Float
+  started_at        DateTime  @default(now())
+  ended_at          DateTime?
+  last_heartbeat    DateTime  @default(now())
+  playback_speed    Float     @default(1.0)
+  skipped_intro     Boolean   @default(false)
+  skipped_outro     Boolean   @default(false)
+  seek_count        Int       @default(0)
+  pause_count       Int       @default(0)
+
+  user  User  @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  anime Anime @relation(fields: [anime_id], references: [id], onDelete: Cascade)
+
+  @@index([user_id, anime_id])
+  @@index([user_id, started_at])
+  @@index([anime_id])
+  @@map("watch_sessions")
+}
+
+model AnimePageView {
+  id          Int       @id @default(autoincrement())
+  user_id     String?
+  anime_id    Int
+  session_id  String?
+  duration_ms Int?
+  referrer    String?
+  created_at  DateTime  @default(now())
+
+  user  User?  @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  anime Anime  @relation(fields: [anime_id], references: [id], onDelete: Cascade)
+
+  @@index([user_id, anime_id])
+  @@index([user_id, created_at])
+  @@index([anime_id, created_at])
+  @@map("anime_page_views")
+}
+
+model SearchQuery {
+  id               Int       @id @default(autoincrement())
+  user_id          String?
+  query            String    @db.VarChar(500)
+  results_count    Int       @default(0)
+  clicked_anime_id Int?
+  session_id       String?
+  created_at       DateTime  @default(now())
+
+  user  User?  @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  anime Anime? @relation(fields: [clicked_anime_id], references: [id], onDelete: SetNull)
+
+  @@index([user_id, created_at])
+  @@index([clicked_anime_id])
+  @@map("search_queries")
 }

@@ -1,4 +1,4 @@
-import { Injectable, UnauthorizedException } from "@nestjs/common";
+import { Injectable, Logger, UnauthorizedException } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { User } from "@prisma/client";
 import * as bcrypt from "bcryptjs";
@@ -21,6 +21,7 @@ type SessionRecord = {
 
 @Injectable()
 export class SessionService {
+  private readonly logger = new Logger(SessionService.name);
   private readonly idleTtlMs: number;
   private readonly absoluteTtlMs: number;
   private readonly redisPrefix: string;
@@ -226,34 +227,46 @@ export class SessionService {
   }
 
   async ensureSessionActive(sessionId: string): Promise<boolean> {
-    const session = await this.getSession(sessionId);
-    if (!session) {
+    try {
+      const session = await this.getSession(sessionId);
+      if (!session) {
+        return false;
+      }
+
+      if (session.revokedAt) {
+        return false;
+      }
+
+      if (session.absoluteExpiresAt <= Date.now()) {
+        await this.revokeSession(sessionId);
+        return false;
+      }
+
+      return true;
+    } catch (error) {
+      this.logger.error(`Error in ensureSessionActive: ${error}`);
+      // If Redis is down, deny access for security
       return false;
     }
-
-    if (session.revokedAt) {
-      return false;
-    }
-
-    if (session.absoluteExpiresAt <= Date.now()) {
-      await this.revokeSession(sessionId);
-      return false;
-    }
-
-    return true;
   }
 
   private async getSession(sessionId: string): Promise<SessionRecord | null> {
-    const client = this.redisService.getClient();
-    const raw = await client.get(this.sessionKey(sessionId));
-    if (!raw) {
-      return null;
-    }
     try {
-      return JSON.parse(raw) as SessionRecord;
+      const client = this.redisService.getClient();
+      const raw = await client.get(this.sessionKey(sessionId));
+      if (!raw) {
+        return null;
+      }
+      try {
+        return JSON.parse(raw) as SessionRecord;
+      } catch (error) {
+        this.logger.warn(`Failed to parse session ${sessionId}, deleting`);
+        await client.del(this.sessionKey(sessionId));
+        return null;
+      }
     } catch (error) {
-      await client.del(this.sessionKey(sessionId));
-      return null;
+      this.logger.error(`Redis error in getSession: ${error}`);
+      throw new UnauthorizedException("Сервис сессий временно недоступен");
     }
   }
 
