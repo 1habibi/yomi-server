@@ -2,6 +2,8 @@ import { BadRequestException, ForbiddenException, Injectable, NotFoundException 
 import { ActivityType, Prisma } from '@prisma/client';
 import { ActivityService } from '../activity/activity.service';
 import { PrismaService } from '../prisma/prisma.service';
+import { WebSocketGatewayHandler } from '../websocket/websocket.gateway';
+import { CommentsGateway } from './comments.gateway';
 import { CommentResponseDto } from './dto/comment-response.dto';
 import { CreateCommentDto } from './dto/create-comment.dto';
 import { CommentSortBy, GetCommentsDto } from './dto/get-comments.dto';
@@ -15,6 +17,8 @@ export class CommentsService {
   constructor(
     private prisma: PrismaService,
     private activityService: ActivityService,
+    private websocketGateway: WebSocketGatewayHandler,
+    private commentsGateway: CommentsGateway,
   ) {}
 
   async create(
@@ -74,7 +78,7 @@ export class CommentsService {
       });
 
       if (parentComment && parentComment.user_id !== userId) {
-        await this.prisma.notification.create({
+        const notification = await this.prisma.notification.create({
           data: {
             type: 'COMMENT_REPLY',
             user_id: parentComment.user_id,
@@ -82,6 +86,30 @@ export class CommentsService {
             comment_id: comment.id,
             anime_id: animeId,
           },
+          include: {
+            actor: {
+              select: {
+                id: true,
+                name: true,
+                avatar_url: true,
+              },
+            },
+          },
+        });
+
+        this.websocketGateway.sendNotificationToUser(parentComment.user_id, {
+          id: notification.id,
+          type: notification.type,
+          actor: {
+            id: notification.actor.id,
+            name: notification.actor.name,
+            avatar_url: notification.actor.avatar_url,
+          },
+          comment_id: notification.comment_id,
+          anime_id: notification.anime_id,
+          is_read: notification.is_read,
+          read_at: notification.read_at,
+          created_at: notification.created_at,
         });
       }
     }
@@ -94,7 +122,10 @@ export class CommentsService {
       metadata: { parent_id: dto.parent_id },
     });
 
-    return this.formatCommentResponse(comment, userId);
+    const formattedComment = this.formatCommentResponse(comment, userId);
+    this.commentsGateway.notifyNewComment(animeId, formattedComment);
+
+    return formattedComment;
   }
 
   async findAllByAnime(
@@ -262,6 +293,8 @@ export class CommentsService {
       },
     });
 
+    this.commentsGateway.notifyCommentUpdated(updated.anime_id, id);
+
     return this.formatCommentResponse(updated, userId);
   }
 
@@ -284,6 +317,8 @@ export class CommentsService {
     await this.prisma.comment.delete({
       where: { id },
     });
+
+    this.commentsGateway.notifyCommentDeleted(comment.anime_id, id);
   }
 
   async likeComment(
@@ -341,7 +376,7 @@ export class CommentsService {
       });
 
       if (comment.user_id !== userId && dto.is_like) {
-        await this.prisma.notification.create({
+        const notification = await this.prisma.notification.create({
           data: {
             type: 'COMMENT_LIKE',
             user_id: comment.user_id,
@@ -349,9 +384,36 @@ export class CommentsService {
             comment_id: commentId,
             anime_id: comment.anime_id,
           },
+          include: {
+            actor: {
+              select: {
+                id: true,
+                name: true,
+                avatar_url: true,
+              },
+            },
+          },
+        });
+
+        this.websocketGateway.sendNotificationToUser(comment.user_id, {
+          id: notification.id,
+          type: notification.type,
+          actor: {
+            id: notification.actor.id,
+            name: notification.actor.name,
+            avatar_url: notification.actor.avatar_url,
+          },
+          comment_id: notification.comment_id,
+          anime_id: notification.anime_id,
+          is_read: notification.is_read,
+          read_at: notification.read_at,
+          created_at: notification.created_at,
         });
       }
     }
+
+
+    this.commentsGateway.notifyCommentReaction(comment.anime_id, commentId);
 
     return this.getCommentLikeStats(commentId, userId);
   }
