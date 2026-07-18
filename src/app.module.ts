@@ -13,6 +13,7 @@ import { NotificationsModule } from './notifications/notifications.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { ProfilesModule } from './profiles/profiles.module';
 import { RecommendationsModule } from './recommendations/recommendations.module';
+import { CharacterSearchModule } from './character-search/character-search.module';
 import { RedisModule } from './redis/redis.module';
 import { ReviewsModule } from './reviews/reviews.module';
 import { UploadModule } from './upload/upload.module';
@@ -46,6 +47,7 @@ import { WebSocketModule } from './websocket/websocket.module';
     WatchTrackingModule,
     AnalyticsModule,
     RecommendationsModule,
+    CharacterSearchModule,
   ],
 })
 export class AppModule {}

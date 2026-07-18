@@ -11,6 +11,8 @@ const CACHE_TTL = {
   discovery: 5 * 60,    // 5 min
 };
 
+const AI_REQUEST_TIMEOUT_MS = 10_000;
+
 @Injectable()
 export class RecommendationsService {
   private readonly logger = new Logger(RecommendationsService.name);
@@ -21,7 +23,9 @@ export class RecommendationsService {
     private readonly redis: RedisService,
     private readonly config: ConfigService,
   ) {
-    this.aiServiceUrl = this.config.get<string>('AI_SERVICE_URL', 'http://localhost:8001');
+    this.aiServiceUrl = this.config
+      .get<string>('AI_SERVICE_URL', 'http://127.0.0.1:8001')
+      .replace(/\/$/, '');
   }
 
   async getPersonal(userId: string, topN = 20) {
@@ -152,21 +156,53 @@ export class RecommendationsService {
   }
 
   private async fetchAi(path: string, options?: { method?: string }) {
+    const url = `${this.aiServiceUrl}${path}`;
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), AI_REQUEST_TIMEOUT_MS);
+
     try {
-      const res = await fetch(`${this.aiServiceUrl}${path}`, {
+      const res = await fetch(url, {
         method: options?.method || 'GET',
+        signal: controller.signal,
         headers: {
           'Content-Type': 'application/json',
         },
       });
       if (!res.ok) {
-        throw new Error(`AI service responded with ${res.status}`);
+        const errorText = await res.text().catch(() => 'Unknown error');
+        throw new Error(`AI service responded with ${res.status}: ${errorText}`);
       }
       return res.json();
     } catch (err) {
-      this.logger.error(`AI service request failed: ${err}`);
+      this.logger.error(`AI service request failed (${url}): ${this.formatAiError(err)}`);
       throw new ServiceUnavailableException('Recommendation service unavailable');
+    } finally {
+      clearTimeout(timeout);
     }
+  }
+
+  private formatAiError(err: unknown) {
+    if (!(err instanceof Error)) return String(err);
+
+    const cause = (err as Error & { cause?: unknown }).cause;
+    if (!cause || typeof cause !== 'object') {
+      return `${err.name}: ${err.message}`;
+    }
+
+    const details = cause as {
+      code?: string;
+      address?: string;
+      port?: number;
+      message?: string;
+    };
+    const endpoint = details.address && details.port ? ` ${details.address}:${details.port}` : '';
+    const causeMessage = details.code
+      ? `${details.code}${endpoint}`
+      : details.message;
+
+    return causeMessage
+      ? `${err.name}: ${err.message}; cause: ${causeMessage}`
+      : `${err.name}: ${err.message}`;
   }
 
   private async enrichWithAnimeData(items: Array<{ anime_id: number; score: number; source?: string }>) {
